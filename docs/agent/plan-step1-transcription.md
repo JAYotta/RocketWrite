@@ -85,24 +85,24 @@
 
 ## 3. 实施步骤
 
-### 3.1 项目初始化（1-2 小时）
+### 3.1 项目初始化（已完成）
 
 **步骤：**
 
-1. **创建项目结构**：建立 `frontend` 和 `backend` 目录。
-2. **前端初始化 (`frontend`)**：
+1. **创建项目结构**：建立 `frontend` 和 `backend` 目录。✅
+2. **前端初始化 (`frontend`)**：✅
    - 在 `frontend` 目录下使用 Vite 初始化 React + TypeScript 项目。
    - **安装依赖**：
    - 编辑器核心：`@tiptap/react`, `@tiptap/starter-kit`
    - ProseMirror 类型：`@tiptap/pm`
-3. **后端初始化 (`backend`)**：
+3. **后端初始化 (`backend`)**：✅
    - 在 `backend` 目录下创建虚拟环境和 `requirements.txt`。
    - **安装依赖**：
    - 语音识别：`realtimestt`
    - 服务端框架：`fastapi`, `uvicorn`, `websockets`
    - 数学计算：`numpy`, `scipy`
    - 系统依赖：`portaudio` (macOS 需通过 brew 安装)
-4. **环境配置**：
+4. **环境配置**：✅
    - 确保 `frontend/tsconfig.json` 包含严格类型检查
    - 配置路径别名（可选）
 
