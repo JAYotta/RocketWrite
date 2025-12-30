@@ -10,14 +10,30 @@ if ! command -v brew &> /dev/null; then
 fi
 
 echo "📦 Installing system dependencies..."
-brew install portaudio openblas python@3.11
+brew install portaudio openblas
 
-echo "ℹ️  Using Python 3.11 to ensure binary wheels are available (skips compilation)"
+# Check Python version
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python 3 not found. Please install Python 3.10+."
+    exit 1
+fi
 
-echo "🐍 Creating Python 3.11 virtual environment..."
+PY_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
+PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+
+if [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -ge 10 ]; then
+    echo "✅ Found Python $PY_VERSION (>= 3.10)"
+else
+    echo "❌ Python version $PY_VERSION is too old. Please install Python 3.10 or newer."
+    echo "   Recommended: brew install python"
+    exit 1
+fi
+
+echo "🐍 Creating virtual environment..."
 cd backend
 rm -rf venv
-/opt/homebrew/bin/python3.11 -m venv venv
+python3 -m venv venv
 
 echo "📥 Installing Python dependencies..."
 source venv/bin/activate

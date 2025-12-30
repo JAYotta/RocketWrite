@@ -1,4 +1,5 @@
-realtimestt
 fastapi
 uvicorn
+python-multipart
+mlx-whisper
 websockets
