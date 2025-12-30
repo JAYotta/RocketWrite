@@ -7,14 +7,13 @@ graph TB
     subgraph "前端应用"
         UI[React UI]
         Editor[Tiptap编辑器]
-        VoiceHook[语音识别Hook]
+        VoiceHook[useMicVAD<br/>静音检测]
         NLUHook[指令解析Hook]
     end
 
     subgraph "语音识别层"
-        ASR[ASR引擎]
-        ASR_Local[RealtimeSTT<br/>Python服务]
-        ASR_Cloud[云端API<br/>备选]
+        ASR_Service[FastAPI服务<br/>无状态]
+        MLX_Engine[MLX Whisper<br/>Mac Native]
     end
 
     subgraph "指令理解层"
@@ -31,9 +30,8 @@ graph TB
 
     UI --> Editor
     UI --> VoiceHook
-    VoiceHook --> ASR
-    ASR --> ASR_Local
-    ASR --> ASR_Cloud
+    VoiceHook -->|Audio Blob| ASR_Service
+    ASR_Service --> MLX_Engine
 
     UI --> NLUHook
     NLUHook --> LLM

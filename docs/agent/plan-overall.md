@@ -31,9 +31,10 @@
 
 **语音识别（ASR）：**
 
-- **核心方案**：RealtimeSTT（本地 Python 服务，基于 Faster-Whisper + VAD）
-- **通信协议**：WebSocket (Float32 PCM Stream)
-- **备选**：Whisper WASM（纯前端方案，仅作为无法安装 Python 环境时的降级）
+- **核心方案**：Native MLX Backend (Mac-First)
+- **实现原理**：前端 VAD (ONNX) + 后端 MLX Whisper (FastAPI)
+- **通信模式**：HTTP Post (Sentence-Level) / WebSocket (Future)
+- **备选**：Whisper WASM（纯前端方案降级）
 
 **自然语言理解（NLU）：**
 
@@ -57,18 +58,18 @@
 
 **功能清单：**
 
-- [ ] Python 本地服务搭建 (FastAPI + RealtimeSTT)
-- [ ] 前端 AudioWorklet 音频流处理
-- [ ] WebSocket 双向通信
+- [ ] Python 本地服务搭建 (FastAPI + MLX-Whisper)
+- [ ] 前端 VAD 集成 (silero-vad-react)
+- [ ] 录音状态管理 (Listening/Processing)
 - [ ] Tiptap 编辑器基础配置
-- [ ] 实时转录与更正 (Growing Buffer 机制)
+- [ ] 整句转录与上屏 (Sentence-Level)
 - [ ] 幽灵文字 (Ghost Text) 装饰器实现
 - [ ] 基础 UI（麦克风按钮、状态指示）
 
 **技术方案：**
 
 - 采用 Client-Server 架构 (Localhost)
-- 利用 RealtimeSTT 的 VAD 和实时重转写能力
+- 前端负责 VAD 切分，后端负责纯净音频转录 (Stateless)
 
 **时间估算：** 2-3 个工作日
 
@@ -203,7 +204,7 @@ const SYSTEM_PROMPT = `
 
 **时间估算：** 4-5 个工作日
 
-### 3.7 阶段七：ASR 升级（可选）
+### 3.8 阶段七：ASR 升级（可选）
 
 **目标：** 提升语音识别准确率
 
@@ -216,21 +217,32 @@ const SYSTEM_PROMPT = `
 
 **时间估算：** 5-7 个工作日
 
-### 3.8 阶段八：Native 应用（未来）
+### 3.9 阶段八：跨平台与原生化 (Cross-platform & Native)
 
-**目标：** 考虑开发原生应用以提升性能
+**目标**：打破 Python 依赖，实现全平台覆盖与极致性能。
 
-**可选方案：**
+**路径 A：Hybrid Engine (Desktop Cross-platform)**
+- **架构**：Election/Tauri + Python Backend (打包)。
+- **适配**：
+  - Windows/Linux: 使用 `Faster-Whisper` (CUDA/CPU)。
+  - macOS: 使用 `MLX-Whisper` (Python绑定)。
 
-- **React Native**：跨平台，代码复用
-- **Electron**：桌面应用，易于部署
-- **原生开发**：iOS/Android，最佳性能
+**路径 B：Pure Native (Apple Ecosystem)**
+- **技术栈**：Swift + SwiftUI + **MLX Swift**。
+- **核心优势**：
+  - **`mlx-swift`**：Apple 官方提供的 Swift 接口，直接在 Swift 中调用 MLX 模型，无需 Python 环境。
+  - **性能**：零跨语言损耗，内存占用更低。
+  - **分发**：符合 Mac App Store 审核标准 (Sandbox Friendly)。
 
-**考虑因素：**
+### 3.10 阶段九：真·实时流式升级 (True Streaming)
 
-- 性能需求（是否需要原生性能）
-- 部署复杂度
-- 用户体验差异
+**目标**：在架构稳定后，回归"字字蹦出"的极致体验。
+
+**参考标准**：复刻 `RealtimeSTT` 的抗抖动体验 (详见分析文档)。
+
+**技术方案**：
+- **Backend Streaming**：将 MLX/Whisper 接口改造为 Generator，输出 Token 流。
+- **Frontend Algo**：即 "Stabilization Algorithm"，通过比对新旧 Token 流的 LCP (Longest Common Prefix) 来决定上屏时机，消除屏幕闪烁。
 
 ## 4. 核心交互流程
 

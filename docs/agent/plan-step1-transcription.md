@@ -28,17 +28,20 @@
 
 **语音识别方案（核心架构）：**
 
-- **RealtimeSTT（本地服务）**
-  - **RealtimeSTT**：Python 后端服务，基于 Whisper 的实时语音识别
-  - **核心机制**：VAD 断句 + Growing Buffer Re-transcription（实时更正）
+**语音识别方案（核心架构）：**
+
+- **Native MLX Backend (Mac-First)**
+  - **核心技术**：`server.py` + `mlx-whisper`
+  - **设计目标**：专为 Apple Silicon (M1/M4) 优化。
+  - **核心机制**：
+    - **Frontend VAD**：前端 `vad-react` 负责检测静音与切分。
+    - **Stateless Inference**：后端只负责接收音频文件并返回文本。
+    - **Sentence-Level**：整句转录，无流式更正，极度稳定。
   - **优势**：
-    - ✅ 效果最好（原生 RealtimeSTT 体验，实时更正）
-    - ✅ 实现最简单（只需前端调用 API，无需实现 VAD + Growing Buffer）
-    - ✅ 开发时间最短（2-3 小时即可完成）
-    - ✅ 准确率高（基于 Whisper，中文支持优秀）
-    - ✅ 完全本地，隐私极好（符合儿童数据保护要求）
-  - **原理**：前端通过 WebSocket/HTTP 连接本地 RealtimeSTT 服务 → 发送音频流 → 接收实时转录结果（支持 Growing Buffer 实时更正）
-  - **部署方式**：本地启动 Python 服务 + 前端开发服务器（个人使用，不需要打包）
+    - ✅ **延迟极低**：MLX 4-bit 量化甚至比实时流还能更快给出整句。
+    - ✅ **架构极简**：后端不到 50 行代码。
+    - ✅ **极致稳定**：无状态，无内存泄漏风险。
+
 
 ## 2. 项目结构
 
@@ -106,45 +109,58 @@
    - 确保 `frontend/tsconfig.json` 包含严格类型检查
    - 配置路径别名（可选）
 
-### 3.2 后端服务开发（backend/server.py）（1-2 小时）
+### 3.2 后端服务开发 (Stateless MLX Server)
 
-**目标**：在 `backend` 目录下创建 Python WebSocket 服务，作为 RealtimeSTT 库的接口层。
+**目标**：构建极简的无状态转录服务。
+
+**文件结构：**
+- `backend/server.py`: FastAPI 入口
 
 **实现逻辑：**
 
-1. **初始化 FastAPI**：配置 CORS 允许跨域。
-2. **初始化 Recorder**：配置 `AudioToTextRecorder`，设置模型（建议 tiny/base）、语言（zh）及 VAD 参数。
-3. **WebSocket 端点**：
-   - 接收前端发送的 Float32 或 Int16 音频数据块。
-   - 调用 `recorder.feed_audio()` 喂入数据。
-   - 通过回调将识别文本（区分 `realtime` 和 `final`）推回前端。
+1.  **API 定义**：
+    ```python
+    @app.post("/transcribe")
+    async def transcribe(file: UploadFile):
+        # 1. 保存临时文件
+        # 2. 调用 mlx_whisper.transcribe(file_path)
+        # 3. 返回 text
+    ```
+2.  **MLX 集成**：
+    - 启动时预加载 `mlx-whisper` 模型 (4-bit/float16)。
+    - 确保 Warmup 防止第一次请求卡顿。
+3.  **无 WebSocket/VAD**：
+    - 后端完全不处理音频流，只处理文件。
+    - 极大降低复杂度。
 
 ### 3.3 启动脚本创建（10 分钟）
 
 **目标**：一键启动前后端。
 **逻辑**：在根目录创建 `start.sh`，并行运行 `python backend/server.py` 和 `cd frontend && npm run dev`。
 
-### 3.4 语音识别与编辑器连接（1-2 小时）
+### 3.4 & 3.5 前端集成 (@ricky0123/vad-react)
 
-**前端服务层 (`RealtimeSTTService.ts`)：**
+**核心组件：**
 
-- **AudioWorklet**：加载 `audio-processor.js`，在独立线程处理音频降采样（防止主线程卡顿）。
-- **WebSocket**：建立连接，将 Worklet 处理后的 PCM 数据流式发送给后端。
-- **状态管理**：管理连接状态、错误重试。
+1.  **useMicVAD Hook**：
+    ```typescript
+    const vad = useMicVAD({
+      onSpeechEnd: (audio) => {
+        // audio 是 float32 数组
+        // 1. 转换为 wav/blob
+        // 2. POST /transcribe
+        // 3. onText(result)
+      },
+      preSpeechPadFrames: 5, // 缓冲，防止丢字
+    })
+    ```
+2.  **UI 状态**：
+    - `vad.listening`: 显示"正在听"波形。
+    - `vad.processing`: 显示"正在转录"旋转图标。
 
-**Hook 层 (`useRealtimeSTT.ts`)：**
-
-- 封装 `start/stop` 方法。
-- 暴露 `onFinal`（最终结果）和 `onInterim`（临时结果）回调。
-
-### 3.5 Tiptap 编辑器集成（2-3 小时）
-
-**核心逻辑：**
-
-- **Hook 封装**：实现 `useTiptapEditor.ts`，配置编辑器参数（参考 `editorConfig.ts`）。
-- **扩展配置**：在 `extensions.ts` 中配置 `StarterKit` 和自定义扩展。
-- **最终结果处理**：直接调用 `insertContent` 插入文本。
-- **临时结果处理**：调用自定义扩展 `InterimResultExtension`（在 `extensions.ts` 中定义），更新装饰器状态。
+3.  **编辑器集成**：
+    - 收到文本后，根据光标位置插入 Tiptap。
+    - (可选) 先插入灰色"..."占位符，收到结果后替换。
 
 ### 3.6 UI 组件开发（2-3 小时）
 

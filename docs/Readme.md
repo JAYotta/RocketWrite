@@ -27,7 +27,8 @@
 
 ## 3. 技术选型
 
-- [ASR 方案评估](agent/analysis-asr-options-final.md) - 对比 Web Speech, Whisper WASM, RealtimeSTT 等方案，最终选择 RealtimeSTT
+- [ASR 方案评估](research/analysis-asr-options.md) - 对比 Web Speech, Whisper WASM, RealtimeSTT 和 Native MLX 方案
+- [Agent 架构决策](agent/asr-architecture-decision.md) - **(Agent Reference)** 核心架构决策记录：Frontend VAD + Stateless MLX Backend
 
 ## 4. 实施计划
 
