@@ -11,44 +11,58 @@ interface UseMicVADReturn {
   errored: any;
 }
 
-const BACKEND_URL = "http://localhost:8000/transcribe"; 
+const BACKEND_URL = 'http://localhost:8000/transcribe';
 
-export function useTranscription(language: string = "zh"): UseMicVADReturn {
-  const [transcription, setTranscription] = useState("");
+interface UseTranscriptionOptions {
+  language?: string;
+  onTranscription?: (text: string) => void;
+}
+
+export function useTranscription({
+  language = 'zh',
+  onTranscription,
+}: UseTranscriptionOptions = {}): UseMicVADReturn {
+  const [transcription, setTranscription] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const vad = useMicVAD({
-    baseAssetPath: "/",
-    onnxWASMBasePath:"/",
-    model:"v5",
+    baseAssetPath: '/',
+    onnxWASMBasePath: '/',
+    model: 'v5',
     // positiveSpeechThreshold: 0.6,
     startOnLoad: false,
     onSpeechEnd: async (audio: Float32Array) => {
       setIsProcessing(true);
-      console.log("Speech ended, processing audio...");
+      console.log('Speech ended, processing audio...');
 
       try {
         // Convert Float32Array to WAV Blob
         const wavBlob = float32ToWav(audio);
-        const file = new File([wavBlob], "audio.wav", { type: "audio/wav" });
+        const file = new File([wavBlob], 'audio.wav', { type: 'audio/wav' });
 
         const formData = new FormData();
-        formData.append("file", file);
-        formData.append("language", language);
+        formData.append('file', file);
+        formData.append('language', language);
 
         const response = await axios.post(BACKEND_URL, formData, {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
         });
 
         if (response.data && response.data.text) {
           const newText = response.data.text.trim();
-          console.log("Transcribed:", newText);
-          setTranscription((prev) => (prev ? prev + " " + newText : newText));
+          console.log('Transcribed:', newText);
+
+          if (newText) {
+            setTranscription((prev) => (prev ? prev + ' ' + newText : newText));
+            if (onTranscription) {
+              onTranscription(newText);
+            }
+          }
         }
       } catch (error) {
-        console.error("Transcription error:", error);
+        console.error('Transcription error:', error);
       } finally {
         setIsProcessing(false);
       }
@@ -104,7 +118,7 @@ function writeString(view: DataView, offset: number, string: string) {
 function floatTo16BitPCM(view: DataView, offset: number, input: Float32Array) {
   for (let i = 0; i < input.length; i++, offset += 2) {
     let s = Math.max(-1, Math.min(1, input[i]));
-    s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    s = s < 0 ? s * 0x8000 : s * 0x7fff;
     view.setInt16(offset, s, true);
   }
 }

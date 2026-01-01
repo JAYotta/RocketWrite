@@ -1,46 +1,159 @@
+:root {
+  --bg-color: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-color: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.5);
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --danger: #ef4444;
+  --success: #22c55e;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
 
 #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  width: 100%;
 }
 
 .container {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
   align-items: center;
-  gap: 20px;
 }
 
-.status-box {
+h1 {
+  font-size: 2.5rem;
+  background: linear-gradient(to right, #60a5fa, #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent; /* Fallback */
+  margin-bottom: 1rem;
+}
+
+/* Status Bar */
+.status-bar {
   display: flex;
-  gap: 15px;
-  font-weight: bold;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 1rem;
+  z-index: 50;
 }
 
-.indicator.active {
-  color: red;
-  animation: pulse 1s infinite;
+.status-indicator {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+.listening {
+  color: var(--danger);
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  animation: pulse 2s infinite;
 }
 
-.transcription-box {
-  background: #f0f0f0;
-  color: #333;
-  padding: 20px;
-  border-radius: 8px;
+.idle {
+  color: var(--text-muted);
+}
+
+.status-processing {
+  color: var(--accent-color);
+  font-weight: 600;
+  animation: float 2s ease-in-out infinite;
+}
+
+.status-error {
+  color: var(--danger);
+}
+
+.controls button {
+  border-radius: 99px;
+  padding: 0.5em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  border: 1px solid transparent;
+  color: white;
+}
+.controls button:hover {
+  border-color: #646cff;
+}
+
+/* Editor */
+.editor-container {
   width: 100%;
-  max-width: 600px;
-  min-height: 100px;
+  max-width: 800px;
+  min-height: 500px;
   text-align: left;
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid var(--glass-border);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-.processing {
-  color: #ff9800;
+/* Tiptap Prose Styles */
+.ProseMirror {
+  outline: none;
+  min-height: 400px;
+  font-size: 1.1rem;
+  line-height: 1.75;
+  color: #e2e8f0;
+}
+
+.ProseMirror p {
+  margin-bottom: 1.25em;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
