@@ -3,3 +3,8 @@ uvicorn
 python-multipart
 mlx-whisper
 websockets
+pytest
+httpx
+scipy
+coverage
+pytest-cov

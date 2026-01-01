@@ -31,14 +31,13 @@ else
 fi
 
 echo "🐍 Creating virtual environment..."
-cd backend
-rm -rf venv
-python3 -m venv venv
+rm -rf .venv
+python3 -m venv .venv
 
 echo "📥 Installing Python dependencies..."
-source venv/bin/activate
+source .venv/bin/activate
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
 echo "✅ Setup complete! You can now run the server with:"
-echo "   source backend/venv/bin/activate && python backend/server.py"
+echo "   source .venv/bin/activate && python backend/server.py"

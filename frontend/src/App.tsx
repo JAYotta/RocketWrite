@@ -1,35 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useTranscription } from './hooks/useMicVAD'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { isListening, transcription, isProcessing, start, pause, errored } = useTranscription();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      <h1>RocketWrite VAD Test</h1>
+      
+      <div className="status-box">
+         <div className={`indicator ${isListening ? 'active' : ''}`}>
+            {isListening ? "🔴 Listening" : "⚪️ Idle"}
+         </div>
+         {isProcessing && <div className="processing">⚡️ Processing...</div>}
+         {errored && <div className="error">Error: {JSON.stringify(errored)}</div>}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+
+      <div className="controls">
+        {!isListening ? (
+           <button onClick={start}>Start Microphone</button>
+        ) : (
+           <button onClick={pause}>Stop Microphone</button>
+        )}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+
+      <div className="transcription-box">
+        <h3>Transcription:</h3>
+        <p>{transcription || "Start speaking..."}</p>
+      </div>
+    </div>
   )
 }
 
 export default App
+

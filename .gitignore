@@ -13,9 +13,9 @@ yarn-error.log*
 __pycache__/
 *.pyc
 *.pyo
+.coverage
 .Python
-venv/
-.env
+.venv/
 
 # Logs
 logs/

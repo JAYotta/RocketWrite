@@ -1,95 +1,143 @@
-import os
-import time
-import shutil
+import io
 import logging
+import time
+from contextlib import asynccontextmanager
+from typing import Optional
+
+import mlx.core as mx
 import mlx_whisper
-from fastapi import FastAPI, UploadFile, File, HTTPException
+import numpy as np
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from mlx_whisper.transcribe import ModelHolder
+from scipy.io import wavfile
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("RocketWrite-Backend")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
-app = FastAPI(title="RocketWrite MLX Backend")
+MODEL_PATH = "mlx-community/whisper-large-v3-turbo"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Warmup the model
+    logger.info(f"Probable cached model path: {MODEL_PATH}")
+    logger.info("Warming up model to ensure ModelHolder cache is populated...")
+    try:
+        # Explicitly load the model into memory using ModelHolder
+        # This avoids the overhead of generating dummy audio and running a full transcription pipeline
+        ModelHolder.get_model(MODEL_PATH, mx.float16)
+        logger.info("Model warmup complete. Backend is ready.")
+    except Exception as e:
+        logger.error(f"Model warmup failed: {e}")
+
+    yield
+
+    # Shutdown logic (if any)
+    logger.info("Shutting down...")
+
+
+app = FastAPI(lifespan=lifespan, title="RocketWrite MLX Backend")
 
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for dev
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Model Configuration
-MODEL_PATH = "mlx-community/whisper-large-v3-turbo" # Default optimized model
-TEMP_DIR = "temp_audio"
-
-os.makedirs(TEMP_DIR, exist_ok=True)
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Warmup the model on startup.
-    This ensures the model weights are loaded into Unified Memory.
-    """
-    logger.info(f"Loading MLX Whisper Model: {MODEL_PATH}")
-    try:
-        # Simple warmup with dummy audio or just letting the library handle lazy loading logic
-        # For now, we trust mlx-whisper to load on first call, or we can force a load here.
-        # Let's log that we are ready.
-        logger.info("Backend ready to transcribe.")
-    except Exception as e:
-        logger.error(f"Failed to load model: {e}")
 
 @app.post("/transcribe")
-async def transcribe_endpoint(file: UploadFile = File(...)):
-    """
-    Receives an audio file (wav/webm/etc) and returns the transcribed text.
-    """
+async def transcribe_endpoint(
+    file: UploadFile = File(...),
+    language: Optional[str] = Form(
+        "zh"
+    ),  # Default to Chinese as per RocketWrite context
+):
     start_time = time.time()
-    file_location = os.path.join(TEMP_DIR, file.filename)
-    
-    try:
-        # Save uploaded file
-        with open(file_location, "wb+") as file_object:
-            shutil.copyfileobj(file.file, file_object)
-            
-        logger.info(f"Received file: {file.filename}, Size: {os.path.getsize(file_location)} bytes")
 
-        # Transcribe using MLX
-        # Note: verbose=False to keep stdout clean
-        result = mlx_whisper.transcribe(
-            file_location,
-            path_or_hf_repo=MODEL_PATH,
-            verbose=False,
-            language="zh" # Default to Chinese for this project
+    try:
+        # Read file content into memory
+        file_content = await file.read()
+
+        logger.info(
+            f"Received audio, size: {len(file_content)} bytes, Language: {language}"
         )
-        
+
+        # Decode WAV from memory
+        # scipy.io.wavfile can read from a bytes buffer (io.BytesIO)
+
+        # Read WAV (returns sample_rate and data)
+        # Data is typically int16 for the WAVs created by frontend
+        try:
+            sample_rate, audio_data = wavfile.read(io.BytesIO(file_content))
+        except Exception as e:
+            logger.error(f"Failed to decode WAV: {e}")
+            return {"error": "Invalid WAV file"}
+
+        # MLX Whisper expects:
+        # 1. 16kHz
+        # 2. float32 in [-1, 1]
+
+        # Resample if needed (Frontend sends 16k, but good to be safe?
+        # For max speed, we assume frontend is correct/controlled, or add a quick check)
+        if sample_rate != 16000:
+            logger.warning(
+                f"Input sample rate is {sample_rate}, expected 16000. Re-sampling is skipped for performance (assuming 16k)."
+            )
+
+        # Normalize to float32 [-1, 1] if int
+        if audio_data.dtype == np.int16:
+            audio_data = audio_data.astype(np.float32) / 32768.0
+        elif audio_data.dtype == np.int32:
+            audio_data = audio_data.astype(np.float32) / 2147483648.0
+        elif audio_data.dtype == np.uint8:
+            audio_data = (audio_data.astype(np.float32) - 128) / 128.0
+
+        # Ensure it's float32
+        if audio_data.dtype == np.float32:
+            pass
+        elif audio_data.dtype == np.float64:
+            audio_data = audio_data.astype(np.float32)
+        else:
+            return {"error": f"Unsupported audio data type: {audio_data.dtype}"}
+
+        # Transcribe
+        # Pass numpy array directly
+        result = mlx_whisper.transcribe(
+            audio_data,
+            path_or_hf_repo=MODEL_PATH,
+            language=language if language != "auto" else None,
+            verbose=False,
+        )
+
         text = result.get("text", "").strip()
-        duration = time.time() - start_time
-        
-        logger.info(f"Transcription complete in {duration:.2f}s: '{text}'")
-        
+        processing_time = time.time() - start_time
+
+        logger.info(f"Transcription complete in {processing_time:.2f}s: '{text}'")
+
         return {
             "text": text,
-            "language": result.get("language"),
-            "processing_time": duration
+            "language": result.get("language", "unknown"),
+            "processing_time": processing_time,
         }
 
     except Exception as e:
         logger.error(f"Transcription error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-    
-    finally:
-        # Cleanup
-        if os.path.exists(file_location):
-            os.remove(file_location)
+        return {"error": str(e)}
+
 
 @app.get("/health")
-async def health_check():
-    return {"status": "ok", "backend": "mlx-whisper"}
+def health_check():
+    return {"status": "ok", "model": MODEL_PATH}
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
