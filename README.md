@@ -10,3 +10,7 @@
 
 - [系统架构](docs/architecture.md)
 - [研究文档](docs/research/)
+
+## License
+
+Apache License 2.0
