@@ -42,7 +42,6 @@
     - ✅ **架构极简**：后端不到 50 行代码。
     - ✅ **极致稳定**：无状态，无内存泄漏风险。
 
-
 ## 2. 项目结构
 
 ```
@@ -97,23 +96,24 @@
    - 在 `frontend` 目录下使用 Vite 初始化 React + TypeScript 项目。
    - **安装依赖**：
    - 编辑器核心：`@tiptap/react`, `@tiptap/starter-kit`
-   - ProseMirror 类型：`@tiptap/pm`
+   - VAD：`@ricky0123/vad-react`, `onnxruntime-web`
+   - HTTP Client: `axios`
+   - UI Library: `HeroUI v3` (Beta) + `Tailwind CSS v4`
 3. **后端初始化 (`backend`)**：✅
    - 在 `backend` 目录下创建虚拟环境和 `requirements.txt`。
    - **安装依赖**：
-   - 语音识别：`realtimestt`
-   - 服务端框架：`fastapi`, `uvicorn`, `websockets`
+   - 语音识别：`mlx-whisper` (Apple Silicon Optimized)
+   - 服务端框架：`fastapi`, `uvicorn`, `python-multipart`
    - 数学计算：`numpy`, `scipy`
-   - 系统依赖：`portaudio` (macOS 需通过 brew 安装)
 4. **环境配置**：✅
    - 确保 `frontend/tsconfig.json` 包含严格类型检查
-   - 配置路径别名（可选）
 
 ### 3.2 后端服务开发 (Stateless MLX Server)
 
 **目标**：构建极简的无状态转录服务。
 
 **文件结构：**
+
 - `backend/server.py`: FastAPI 入口
 
 **实现逻辑：**
@@ -122,21 +122,21 @@
     ```python
     @app.post("/transcribe")
     async def transcribe(file: UploadFile):
-        # 1. 保存临时文件
-        # 2. 调用 mlx_whisper.transcribe(file_path)
-        # 3. 返回 text
+        # 1. 接收 WAV 文件 (In-Memory)
+        # 2. 调用 mlx_whisper.transcribe(audio_data)
+        # 3. 返回 { text: "...", language: "zh" }
     ```
 2.  **MLX 集成**：
-    - 启动时预加载 `mlx-whisper` 模型 (4-bit/float16)。
-    - 确保 Warmup 防止第一次请求卡顿。
-3.  **无 WebSocket/VAD**：
-    - 后端完全不处理音频流，只处理文件。
-    - 极大降低复杂度。
+    - 启动时预加载 `mlx-whisper` 模型 (默认 4-bit 量化)。
+    - 实现 `ModelHolder` 进行模型缓存和预热。
+3.  **无状态设计**：
+    - 不维护 WebSocket 连接。
+    - 纯 HTTP 请求/响应模式，极其可靠。
 
-### 3.3 启动脚本创建（10 分钟）
+### 3.3 启动脚本创建
 
 **目标**：一键启动前后端。
-**逻辑**：在根目录创建 `start.sh`，并行运行 `python backend/server.py` 和 `cd frontend && npm run dev`。
+**逻辑**：创建 `Makefile` 或 `start.sh`，并行运行 `python backend/server.py` 和 `cd frontend && npm run dev`。
 
 ### 3.4 & 3.5 前端集成 (@ricky0123/vad-react)
 
@@ -152,9 +152,10 @@
         // 3. onText(result)
       },
       preSpeechPadFrames: 5, // 缓冲，防止丢字
-    })
+    });
     ```
 2.  **UI 状态**：
+
     - `vad.listening`: 显示"正在听"波形。
     - `vad.processing`: 显示"正在转录"旋转图标。
 

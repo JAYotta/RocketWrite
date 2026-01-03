@@ -19,6 +19,7 @@
    - 符合儿童数据保护要求
 
 3. **纯效率工具**
+
    - 不提供创作辅助或引导性建议
    - 最终版本仍需誊抄
    - 让孩子保持自主思考
@@ -28,8 +29,12 @@
 **第一阶段：文字转录功能（计划中）**
 
 - 技术栈：React + TypeScript + Tiptap
-- ASR：RealtimeSTT (Python 本地服务，WebSocket 通信)
-- 状态：待实施
+- ASR: MLX Whisper (Stateless Backend) - _RealtimeSTT has been deprecated_
+- UI Library: HeroUI v3 (Beta)
+  - Styling: Tailwind CSS v4
+  - Icons: Iconoir React
+  - State: React Hooks
+- 状态：已实施语音转写，正在优化 UI
 
 **核心痛点**：
 
@@ -47,6 +52,7 @@
 ## 技术约束
 
 - 目标平台：Web 浏览器（第一步）
+- 包管理器：pnpm (Required) - use `pnpm dlx` instead of `npx`
 - 性能要求：可接受 1-2 秒延迟
 - 兼容性：现代浏览器（Chrome、Edge、Safari、Firefox）
 

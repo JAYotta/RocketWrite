@@ -11,14 +11,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroui/react": "3.0.0-beta.3",
+    "@heroui/styles": "3.0.0-beta.3",
     "@ricky0123/vad-react": "^0.0.36",
-    "@tiptap/pm": "^3.14.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "@tiptap/core": "^3.14.0",
+    "@tiptap/extensions": "^3.14.0",
     "@tiptap/react": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",
     "axios": "^1.13.2",
+    "iconoir-react": "^7.11.0",
     "onnxruntime-web": "^1.23.2",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "sonner": "^2.0.7",
+    "tailwind-variants": "^3.2.2",
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -31,6 +39,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "prettier": "^3.7.4",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",

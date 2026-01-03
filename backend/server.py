@@ -108,12 +108,17 @@ async def transcribe_endpoint(
             return {"error": f"Unsupported audio data type: {audio_data.dtype}"}
 
         # Transcribe
-        # Pass numpy array directly
+        # Pass numpy array directly and use parameters to prevent loops/hallucinations
         result = mlx_whisper.transcribe(
             audio_data,
             path_or_hf_repo=MODEL_PATH,
             language=language if language != "auto" else None,
             verbose=False,
+            # Prevention of hallucinations:
+            condition_on_previous_text=False,  # Sentences are independent
+            compression_ratio_threshold=2.4,  # Strict repetition check (default 2.4)
+            logprob_threshold=-1.0,  # Discard low confidence (default -1.0)
+            no_speech_threshold=0.6,  # Skip if high probability of silence
         )
 
         text = result.get("text", "").strip()

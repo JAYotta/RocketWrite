@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* Placeholder (at the top) */
+p.is-editor-empty:first-child::before {
+  @apply pointer-events-none float-left h-0 text-neutral-500 content-[attr(data-placeholder)];
+}
