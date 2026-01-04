@@ -38,8 +38,10 @@
 
 **自然语言理解（NLU）：**
 
-- 轻量级 LLM：Qwen-1.8B / Phi-3（4-bit 量化，本地部署）
-- 仅用于指令解析，禁止内容生成
+- **核心方案**：Ollama (Local Inference)
+- **模型**：Qwen2.5-Coder-1.5B-Instruct (JSON/Code Optimized)
+- **框架**：Vercel AI SDK (Frontend) + OpenAI-Compatible API
+- **原则**：仅用于指令解析，禁止内容生成
 
 **语音合成（TTS，可选）：**
 
@@ -58,13 +60,13 @@
 
 **功能清单：**
 
-- [ ] Python 本地服务搭建 (FastAPI + MLX-Whisper)
-- [ ] 前端 VAD 集成 (silero-vad-react)
-- [ ] 录音状态管理 (Listening/Processing)
-- [ ] Tiptap 编辑器基础配置
-- [ ] 整句转录与上屏 (Sentence-Level)
-- [ ] 幽灵文字 (Ghost Text) 装饰器实现
-- [ ] 基础 UI（麦克风按钮、状态指示）
+- [x] Python 本地服务搭建 (FastAPI + MLX-Whisper)
+- [x] 前端 VAD 集成 (@ricky0123/vad-react)
+- [x] 录音状态管理 (Listening/Processing)
+- [x] Tiptap 编辑器基础配置
+- [x] 整句转录与上屏 (Sentence-Level)
+- [ ] 幽灵文字 (Ghost Text) 装饰器实现 (延迟至后续优化)
+- [x] 基础 UI（悬浮麦克风按钮、HeroUI v3、Glassmorphism）
 
 **技术方案：**
 
@@ -75,89 +77,79 @@
 
 **详细计划：** 见 [plan-step1-transcription.md](plan-step1-transcription.md)
 
-### 3.2 阶段一优化：体验打磨与打包
+### 3.2 阶段一延伸：工程化封装 (Phase 1.5)
 
-**目标：** 降低本地 Python 服务的启动门槛，优化启动体验
-
-**功能清单：**
-
-- [ ] 一键启动脚本优化 (start.sh / start.bat)
-- [ ] 错误边界处理 (服务未启动时的友好提示)
-- [ ] 延迟优化 (AudioWorklet 降采样调优)
-- [ ] (可选) 使用 PyInstaller 打包后端服务
-
-**技术方案：**
-
-- 脚本自动化
-- 前端连接状态管理
-
-**优势：**
-
-- ✅ 提升易用性
-- ✅ 减少环境配置问题
-
-**时间估算：** 2-3 个工作日
-
-**注意：** 由于 Phase 1 已采用 RealtimeSTT，原计划的 VAD 集成已内置，本阶段转为工程化优化。
-
-### 3.3 阶段二：语音编辑基础
-
-**目标：** 实现简单的语音修改指令
+**目标：** 降低本地 Python 服务的启动门槛，作为 Phase 2 的坚实基础。
 
 **功能清单：**
 
-- [ ] Push-to-Talk 模式切换（按住空格键进入编辑模式）
-- [ ] 基础指令识别：
-  - "删除" / "删掉 XXX"
-  - "替换 XXX 为 YYY"
-  - "换行" / "句号" / "逗号"
-- [ ] 规则引擎（正则匹配，不依赖 LLM）
-- [ ] 简单的 Diff 预览
+- [ ] 启动脚本 (Start Script) 整合 Ollama + Python Server
+- [ ] 错误边界处理 (服务健康检查)
+- [ ] 延迟优化 (AudioWorklet 调优)
+
+**时间估算：** 随 Phase 2 并行推进
+
+### 3.3 阶段二：MVP 与 最小集验证 (POC Mock) <!-- Phase 2.1 -->
+
+**目标：** 完成基础设施搭建，并通过双侧独立验证消除风险。
+
+**功能清单：**
+
+- [ ] **Infrastructure Setup (基础设施前置)**:
+  - [ ] Ollama 服务搭建 (Qwen2.5-Coder-1.5B)
+  - [ ] Vercel AI SDK 依赖安装 (`ai`, `zod`, `@ai-sdk/ollama`)
+- [ ] **Tool Registry 定义 (前置)**:
+  - [ ] 定义核心工具的 Zod Schema (`insertText`, `deleteText`, `replaceText`, `applyFormat`)
+  - [ ] 创建工具定义文件 (`frontend/src/schemas/editor-commands.ts`)
+  - [ ] 注：完整集成在阶段三，但定义需要在阶段二完成（供测试使用）
+- [ ] **基础命令执行器 (前置)**:
+  - [ ] 实现基础的命令执行函数（至少支持简单场景）
+  - [ ] 创建命令执行器文件 (`frontend/src/utils/commandExecutor.ts`)
+  - [ ] 注：完整实现（包括复杂文本定位）在阶段三，但基础版本需要在阶段二完成（供 Mock 测试使用）
+- [ ] **Schema 提取工具**:
+  - [ ] 实现 Schema 信息提取函数 (`extractSchemaInfo`)
+  - [ ] 用于测试 Schema Awareness
+- [ ] **Validation (双侧验证)**:
+  - [ ] 后端脚本验证 (`scripts/test-backend.ts`) - 使用 Tool Registry 定义验证输出
+  - [ ] 前端 Mock 环境 (`frontend/src/utils/mock-provider.ts`) - 使用命令执行器验证 UI
 
 **技术方案：**
 
-- 使用正则表达式匹配常见指令
-- 避免引入 LLM，降低复杂度
+- 详见 [Phase 2 POC 验证计划](plan-step2-minimal-poc.md)
+
+**时间估算：** 2-3 个工作日（包含 Tool Registry 定义和基础命令执行器）
+
+### 3.4 阶段三：完整智能指令解析 (Local AI Toolkit) <!-- Phase 2.2 -->
+
+**目标：** 移除 Mock，实现端到端的自然语言指令控制。
+
+**功能清单：**
+
+- [ ] **Integration (端到端集成)**:
+  - [ ] `useChat` Hook 对接本地 Ollama API
+  - [ ] 移除 Mock Provider（或保留作为 Debug 模式）
+  - [ ] 实现指令路由逻辑（区分"内容输入"和"编辑指令"）
+- [ ] **Command Bridge 完善 (指令解析)**:
+  - [x] Tool Registry 定义（已在阶段二完成）
+  - [ ] 完善命令执行器（实现复杂文本定位："第一段"、"第二句"等）
+  - [ ] 实现文本定位逻辑 (`findTextPosition`)
+  - [ ] 意图分类与参数提取（LLM 调用）
+- [ ] **Schema & Context 完整实现**:
+  - [x] Schema 提取（已在阶段二完成基础版本）
+  - [ ] Schema 约束注入到 System Prompt（完整实现）
+  - [ ] Context 提取（滑动窗口策略）
+  - [ ] Context 注入到请求
+- [ ] **UX/UI**:
+  - [ ] "Ask AI" 悬浮菜单 (参考 Novel.sh)
+  - [ ] Diff 预览 (基于 `prosemirror-suggestion-mode`)
+  - [ ] 确认/拒绝交互
+  - [ ] 加载状态和错误处理
+
+**技术方案：**
+
+- 详见 [Phase 3 实施计划](plan-step3-intelligence.md)
 
 **时间估算：** 3-5 个工作日
-
-### 3.4 阶段三：智能指令解析
-
-**目标：** 引入轻量级 LLM 实现自然语言指令理解
-
-**功能清单：**
-
-- [ ] 轻量级 LLM 本地部署（Qwen-1.8B 量化版）
-- [ ] 指令解析架构：
-  - Function Calling Schema 定义
-  - 意图分类（insert/delete/replace/move）
-  - 参数提取
-- [ ] 生成防护机制：
-  - System Prompt 约束
-  - 运行时内容验证
-  - 拒绝生成请求
-- [ ] 数字编号选择机制（类似 iOS Voice Control）
-- [ ] Diff 预览和确认流程
-
-**技术细节：**
-
-```typescript
-// 指令解析Schema
-interface EditIntent {
-  operation: "insert" | "delete" | "replace" | "move";
-  target: string; // 目标文本或位置
-  content?: string; // 替换内容（仅replace时）
-  scope: "word" | "sentence" | "paragraph" | "all";
-}
-
-// 生成防护
-const SYSTEM_PROMPT = `
-你是一个文档编辑指令解析器，只能理解修改意图，绝不能生成内容。
-禁止操作：generate, rewrite, expand, summarize
-`;
-```
-
-**时间估算：** 5-7 个工作日
 
 ### 3.5 阶段四：去口语化处理
 
@@ -222,12 +214,14 @@ const SYSTEM_PROMPT = `
 **目标**：打破 Python 依赖，实现全平台覆盖与极致性能。
 
 **路径 A：Hybrid Engine (Desktop Cross-platform)**
+
 - **架构**：Election/Tauri + Python Backend (打包)。
 - **适配**：
   - Windows/Linux: 使用 `Faster-Whisper` (CUDA/CPU)。
-  - macOS: 使用 `MLX-Whisper` (Python绑定)。
+  - macOS: 使用 `MLX-Whisper` (Python 绑定)。
 
 **路径 B：Pure Native (Apple Ecosystem)**
+
 - **技术栈**：Swift + SwiftUI + **MLX Swift**。
 - **核心优势**：
   - **`mlx-swift`**：Apple 官方提供的 Swift 接口，直接在 Swift 中调用 MLX 模型，无需 Python 环境。
@@ -241,6 +235,7 @@ const SYSTEM_PROMPT = `
 **参考标准**：复刻 `RealtimeSTT` 的抗抖动体验 (详见分析文档)。
 
 **技术方案**：
+
 - **Backend Streaming**：将 MLX/Whisper 接口改造为 Generator，输出 Token 流。
 - **Frontend Algo**：即 "Stabilization Algorithm"，通过比对新旧 Token 流的 LCP (Longest Common Prefix) 来决定上屏时机，消除屏幕闪烁。
 
@@ -270,29 +265,24 @@ sequenceDiagram
 sequenceDiagram
     participant User as 用户
     participant UI as 界面
-    participant ASR as 语音识别
-    participant LLM as 指令解析
-    participant Guard as 生成防护
+    participant User as 用户
+    participant UI as 界面
+    participant ASR as 语音识别 (Server)
+    participant SDK as Vercel AI SDK
+    participant Ollama as 本地模型 (Qwen)
     participant Editor as 编辑器
 
     User->>UI: 按住空格键 + "删掉'高兴'"
     UI->>ASR: 识别语音
-    ASR->>LLM: 转写文本
-    LLM->>Guard: 解析意图
-    Guard->>Guard: 验证非生成操作
-    Guard->>Editor: 执行删除指令
-
-    alt 存在歧义
-        Editor->>UI: 显示数字编号
-        UI->>User: TTS: "找到2处，请说数字"
-        User->>UI: 说"1"
-        UI->>Editor: 确认选择
-    end
-
-    Editor->>UI: 显示Diff预览
-    UI->>User: TTS: "已删除，确认吗？"
-    User->>UI: 说"确认"
-    UI->>Editor: 应用修改
+    ASR->>UI: 返回 "删掉高兴"
+    UI->>SDK: append("删掉高兴")
+    SDK->>Ollama: Tool Call (deleteText)
+    Ollama->>SDK: JSON { tool: "deleteText", args: { text: "高兴" } }
+    SDK->>Editor: Dispatch Command
+    Editor->>UI: 显示 Diff 预览 (Red Strikethrough)
+    UI->>User: 确认?
+    User->>UI: 确认
+    UI->>Editor: Commit Transaction
 ```
 
 ### 4.3 数字编号选择机制

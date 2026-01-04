@@ -4,46 +4,33 @@
 
 ```mermaid
 graph TB
-    subgraph "前端应用"
-        UI[React UI]
-        Editor[Tiptap编辑器]
-        VoiceHook[useMicVAD<br/>静音检测]
-        NLUHook[指令解析Hook]
-    end
+    subgraph "Local Device (Mac)"
+        subgraph "Frontend (Vite/React)"
+            UI["React UI"]
+            Editor["Tiptap Editor"]
+            VercelSDK["Vercel AI SDK<br/>(Core/React)"]
+            CommandDispatcher["Command Dispatcher<br/>(Tool Registry)"]
+        end
 
-    subgraph "语音识别层"
-        ASR_Service[FastAPI服务<br/>无状态]
-        MLX_Engine[MLX Whisper<br/>Mac Native]
-    end
-
-    subgraph "指令理解层"
-        LLM[轻量级LLM<br/>Qwen-1.8B]
-        IntentParser[意图解析器]
-        Guard[生成防护]
-    end
-
-    subgraph "编辑器核心"
-        ProseMirror[ProseMirror文档模型]
-        Transaction[事务管理]
-        DiffView[Diff预览视图]
+        subgraph "Backend Services"
+            ASR_Service["FastAPI ASR Server<br/>(Whisper)"]
+            Ollama_Service["Ollama Server<br/>(Qwen 2.5 Coder)"]
+        end
     end
 
     UI --> Editor
-    UI --> VoiceHook
-    VoiceHook -->|Audio Blob| ASR_Service
-    ASR_Service --> MLX_Engine
+    UI --> VercelSDK
 
-    UI --> NLUHook
-    NLUHook --> LLM
-    LLM --> IntentParser
-    IntentParser --> Guard
-    Guard --> Transaction
-    Transaction --> Editor
+    %% Audio Flow
+    UI -->|Audio Blob| ASR_Service
+    ASR_Service -->|Text| UI
 
-    Editor --> ProseMirror
-    Editor --> DiffView
+    %% Intelligence Flow
+    VercelSDK -->|OpenAI API| Ollama_Service
+    Ollama_Service -->|JSON/Tool Call| VercelSDK
+    VercelSDK -->|Tool Args| CommandDispatcher
+    CommandDispatcher -->|Transaction| Editor
 
-    style Guard fill:#ffcccc
-    style ASR_Local fill:#ccffcc
-    style LLM fill:#ccccff
+    style Ollama_Service fill:#ccffcc,stroke:#009900
+    style VercelSDK fill:#ccccff,stroke:#000099
 ```

@@ -167,26 +167,18 @@
 
 **组件清单：**
 
-1. **MicrophoneButton** (`src/components/VoiceControl/MicrophoneButton.tsx`)
+1. **Floating Action Button** (Integrated in `App.tsx`)
 
-   - 显示录音状态（开启/关闭）
-   - 点击切换录音状态
-   - 视觉反馈（动画效果）
+   - 位于屏幕底部中央，悬浮设计
+   - 多状态交互：
+     - Idle: 麦克风图标
+     - Listening (Silence): 暂停图标 (Hover 时)
+     - Speaking: 脉冲动画 (Pulsing Microphone)
 
-2. **VoiceVisualizer** (`src/components/VoiceControl/VoiceVisualizer.tsx`) (可选)
-
-   - 接收音频音量/频率数据
-   - 显示声波动画，增加互动感
-
-3. **StatusIndicator** (`src/components/StatusIndicator.tsx`)
-
-   - 显示当前状态：空闲/录音中/处理中
-   - 简单的文字或图标提示
-
-4. **VoiceEditor** 主界面整合
-   - 布局：编辑器占据主要区域
-   - 控制栏：麦克风按钮 + 状态指示器
-   - 响应式设计（适配平板）
+2. **Full Screen Editor** (Integrated in `App.tsx`)
+   - 极简全屏设计 (`min-h-screen`)
+   - 去除多余边框和标题干扰
+   - 专注于写作体验
 
 **样式要求：**
 
@@ -266,21 +258,20 @@
 
 ### 6.1 功能完整性
 
-- [x] 能够启动 RealtimeSTT 服务
+- [x] 能够启动 RealtimeSTT 服务 (使用 MLX Backend 替代)
 - [x] 能够点击按钮开始/停止录音
-- [x] 音频流能够正确发送到 RealtimeSTT 服务
-- [x] 能够接收实时转录结果（支持 Growing Buffer 实时更正）
+- [x] 音频流能够正确发送到 Backend
+- [x] 能够接收实时转录结果 (Sentence-Level)
 - [x] 转录结果能够正确显示在编辑器中
-- [x] 识别延迟在可接受范围内（200-500ms，接近实时）
+- [x] 识别延迟在可接受范围内 (MLX 4-bit 极速)
 
 ### 6.2 用户体验
 
-- [x] 界面简洁，操作直观
-- [x] 有明确的状态反馈（空闲/录音中/处理中）
-- [x] 服务连接状态提示
-- [x] 错误提示友好（服务未启动、连接失败等）
+- [x] 界面简洁，操作直观 (全屏编辑器)
+- [x] 有明确的状态反馈 (FAB 动画)
+- [x] 服务连接状态提示 (Toast 通知)
+- [x] 错误提示友好 (Sonner Integration)
 - [x] 响应流畅，无明显卡顿
-- [x] 支持实时更正效果（Growing Buffer）
 
 ### 6.3 技术质量
 
