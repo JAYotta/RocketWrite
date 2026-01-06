@@ -6,20 +6,20 @@
 
 ### 1.1 Test Back (验证模型能力)
 
-**目标**：不启动前端 UI，直接验证 Ollama + Qwen 2.5 Coder 能否稳定输出符合 Schema 的 Tool Call。
+**目标**：不启动前端 UI，直接验证 Ollama + Qwen 2.5 Coder 能否稳定输出符合 Schema 的 JSON 对象。
 **工具**：Node.js 脚本 (`scripts/test-backend.ts`)
 **输入**：模拟的用户 prompt ("把第一段标红")
 **期望输出**：验证 Zod Schema 解析通过，Tool Call 参数正确。
 
 ### 1.2 Test Front (验证交互逻辑)
 
-**目标**：不依赖真实 LLM（消除延迟和不确定性），验证前端能否正确处理 Tool Call 并更新编辑器。
-**工具**：Mock LLM Provider (`src/lib/mock-provider.ts`)
+**目标**：不依赖真实 LLM（消除延迟和不确定性），验证前端能否正确处理 JSON Intent 并更新编辑器。
+**工具**：Mock LLM Provider (`frontend/src/utils/mock-provider.ts`)
 **模拟**：
 
-- 输入 "删除这段" -> 立即返回 Tool Call `{ tool: "deleteText", args: { target: "selection" } }`
-- 输入 "把第一段标红" -> 立即返回 Tool Call `{ tool: "applyFormat", args: { target: "第一段", format: "highlight" } }`
-- 输入 "把'开心'换成'兴高采烈'" -> 立即返回 Tool Call `{ tool: "replaceText", args: { old: "开心", new: "兴高采烈" } }`
+- 输入 "删除这段" -> 立即返回 JSON `{ type: "deleteText", target: "selection" }`
+- 输入 "把第一段标红" -> 立即返回 JSON `{ type: "applyFormat", target: "第一段", format: "highlight" }`
+- 输入 "把'开心'换成'兴高采烈'" -> 立即返回 JSON `{ type: "replaceText", old: "开心", new: "兴高采烈" }`
 - 验证：UI 是否显示 Diff？点击确认后是否执行？
 
 ## 2. 实施步骤
@@ -41,7 +41,7 @@
 
 ### Step 2: 后端验证脚本 (`scripts/test-backend.ts`)
 
-编写一个独立脚本，使用 Vercel AI SDK Core (`generateText`) 调用本地 Ollama。
+编写一个独立脚本，使用 Vercel AI SDK Core (`generateObject`) 调用本地 Ollama。
 
 **前置条件**：需要先完成 Step 3（Tool Registry 定义），因为测试脚本需要导入工具定义来验证输出。
 
@@ -97,33 +97,22 @@ const prompt = "把选中的文字改成'面向小学生开发'";
 **Mock 数据示例**：
 
 ```typescript
-const mockToolCalls = {
+const mockIntents = {
   把第一段标红: {
-    toolCalls: [
-      {
-        toolCallId: 'call_1',
-        toolName: 'applyFormat',
-        args: { target: '第一段', format: 'highlight', color: 'red' },
-      },
-    ],
+    type: 'applyFormat',
+    target: '第一段',
+    format: 'highlight',
+    color: 'red',
   },
   删除第二句: {
-    toolCalls: [
-      {
-        toolCallId: 'call_2',
-        toolName: 'deleteText',
-        args: { target: '第二句' },
-      },
-    ],
+    type: 'deleteText',
+    target: '第二句',
   },
   "把'开心'换成'兴高采烈'": {
-    toolCalls: [
-      {
-        toolCallId: 'call_3',
-        toolName: 'replaceText',
-        args: { old: '开心', new: '兴高采烈', scope: 'first' },
-      },
-    ],
+    type: 'replaceText',
+    old: '开心',
+    new: '兴高采烈',
+    scope: 'first',
   },
 };
 ```
@@ -148,7 +137,7 @@ const mockToolCalls = {
 ### 3.1 后端测试验收
 
 1.  **Script Pass**: 后端测试脚本能连续 10 次正确解析指令。
-2.  **Schema Validation**: 所有 Tool Call 都通过 Zod Schema 验证。
+2.  **Schema Validation**: 所有输出对象都通过 Zod Schema 验证。
 3.  **Safety Check**: 生成性指令（如"写一篇作文"）被正确拒绝。
 
 ### 3.2 前端测试验收

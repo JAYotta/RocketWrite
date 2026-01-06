@@ -12,20 +12,25 @@
 
 了解项目的起源、痛点分析和核心理念。
 
-- [面向小学生写作痛点的“口头作文”智能辅助工具可行性深度研究报告](research/小学生语音写作工具可行性分析.md)
+- [面向小学生写作痛点的“口头作文”智能辅助工具可行性深度研究报告](research/2025-12-26-1-小学生语音写作工具可行性分析.md)
   > **研究需求**：需要用语音录入作文草稿，并用语音完成修改。
-- [基于语音交互的小学生作文纯效率工具可行性深度研究报告](research/语音作文草稿工具可行性研究.md)
+  > **摘要结论**：报告确认了“过程辅助”而非“结果替代”的高可行性。识别出“转录瓶颈”是核心认知障碍。推荐采用“软件+热敏打印机”或“智能笔”的硬件形态，打通从数字草稿到物理书写的闭环。核心约束是严格禁止生成式 AI 创作，仅利用 LLM 进行基于意图的编辑（润色/引导），必须符合 2025 年教育 AI 合规指南。
+- [基于语音交互的小学生作文纯效率工具可行性深度研究报告](research/2025-12-26-2-语音作文草稿工具可行性研究.md)
   > **研究需求**：不是代写，而是提效工具。核心是用语音录入作文草稿，并用语音完成修改，痛点在于写字的草稿修改麻烦，打字速度不够快操作不够熟练并且会影响思路。不提供生成功能，不提供引导性建议。
-- [“口述即草稿”：面向小学生的语音交互式写作效率工具（Cursor for Kids）](research/小学生高效语音写作工具：基于“Cursor模式”的可行性分析.md)
+  > **摘要结论**：聚焦于 2-6 年级的“纯效率”提升，解决“想得出写不出”的输入输出剪刀差。摒弃 Nuance Dragon 式的命令交互，转向基于“意图识别”的自然语言交互。提出“双通道输入”（录入 vs 编辑模式）及“墨水屏/热敏打印”生态。技术路径明确为：微调 Whisper 模型 + 本地 LLM 处理编辑意图。
+- [“口述即草稿”：面向小学生的语音交互式写作效率工具（Cursor for Kids）](research/2025-12-26-3-小学生高效语音写作工具：基于“Cursor模式”的可行性分析.md)
   > **研究需求**：背景重心应该是写作的低效率，小学生抄写每分钟只能十几个字，草稿修改更是需要反复誊抄，一篇作文可能需要两个小时甚至更多。3.1.1 里，内容润色举的例子”换个更高级的词汇“改成”把开心换成兴高采烈“，因为我们不应该辅助创造，而是纯粹的效率工具。3.2.1 双通道似乎并不是个好设计，但是触发了我的灵感，比如双屏设计，左侧是正文内容，右侧是语音识别，把语音识别里的意图识别出来变成正文显示在左侧，当识别出修改意图时，左侧可以高亮修改区域并显示新内容，同时给一个撤销的操作，类似 cursor 的代码 diff&accept/reject 3.2.3 也可以同步更新，但不要作为核心创新点。4.2.1 是否可以参考 cursor 等可视化工具是怎么做到的。
-- [针对儿童作文场景的自研 Tiptap 语音智能写作工具：技术可行性、竞品分析与战略路径深度研究报告](research/Tiptap语音写作工具可行性分析.md)
+  > **摘要结论**：提出“Cursor for Kids”模式：左文（草稿）右流（对话流），语音作为驱动文本变化的流。核心创新是“Visual Diff”可视化差异确认机制，保护创作安全感。明确“效率模式”优于“教学模式”（如直接替换词汇而不解释）。建议分阶段实施，从 iPad 应用走向专用的“智能录音笔”，并引入“人机回环”的名师精批服务。
+- [针对儿童作文场景的自研 Tiptap 语音智能写作工具：技术可行性、竞品分析与战略路径深度研究报告](research/2025-12-26-4-Tiptap语音写作工具可行性分析.md)
   > **研究需求**：参考 tiptap voice control demo https://www.youtube.com/watch?v=FYETnU-RhyA 思考，并且可能可以忽略我提出的双屏以及二次确认思路，不要考虑墨水屏什么的，我只需要做一个效率工具给自家孩子用，需要先分析可行性，包括能否达到预期效果，技术可行性后加入是否有更好的选择的思考。
-- [语音优先 literacy 架构：面向小学生写作过程的非生成式效率工具深度研究报告](research/儿童写作低效解决方案研究.md)
+  > **摘要结论**：深度评估了 Tiptap + ProseMirror 作为技术核心的优势。指出核心挑战在于将模糊的自然语言映射为精确的 ProseMirror 事务。推荐“混合多模态交互”（语音生成、触控/AI 修订）以缓解延迟和认知负荷。提出“Open Tiptap”架构，利用本地推理规避 SaaS 锁定和隐私风险，实现从“口述记录”到“思维引导”的价值跃迁。
+- [语音优先 literacy 架构：面向小学生写作过程的非生成式效率工具深度研究报告](research/2025-12-27-儿童写作低效解决方案研究.md)
   > **研究需求**：解决核心痛点需要考虑孩子写作的低效率，小学生抄写每分钟只能十几个字，草稿修改更是需要反复誊抄，打字速度不够快操作不够熟练并且会影响思路，一篇作文可能需要两个小时甚至更多。不要提供辅助创作能力，可能会让孩子不自主思考。不需要考虑物理输出，最终版本还是需要誊抄的。
+  > **摘要结论**：倡导“去生成化”（De-generation）架构。将工作流解构为：1. 极速草稿录入（心流保护），2. 语音控制修改（自然语言指令），3. 模拟强化抄写（强制手抄模式）。技术栈锁定为：本地 Whisper (WASM) + Tiptap + 本地 SLM，确保隐私和零延迟。引入“阅读尺”和游戏化机制优化最后的抄写环节。
 
 **总结**：目前来看 `针对儿童作文场景的自研 Tiptap 语音智能写作工具` 最接近我想要的效果，但是没有严格禁止生成式，而 `语音优先 literacy 架构` 又丢弃了 tiptap voice control 的效果，似乎偏离了。
 
-- [意图架构：富文本编辑器中自然语言指令解析的开源范式](research/Tiptap智能指令解析开源方案.md)
+- [意图架构：富文本编辑器中自然语言指令解析的开源范式](research/2026-01-04-1-Tiptap智能指令解析开源方案.md)
   > **研究需求** 已完成 tiptap 和语音转录的功能，现在需要思考智能指令解析的技术方案。目前的建议是
   >
   > ```
@@ -37,20 +42,41 @@
   > 需要考虑怎么样让 LLM 输出编辑器可执行的编辑指令 可能 https://tiptap.dev/docs/content-ai/capabilities/ai-toolkit/primitives/edit-the-document 这个 ai-toolkit 最合适，但是在订阅外额外需要联系销售购买的功能，没法快速使用
   >
   > 可能可以参考 https://github.com/artemnistuley/awesome-prosemirror 和 https://github.com/ueberdosis/awesome-tiptap 看看是否能找到合适的库
-- [解构黑盒与本地化实现方案：用 LangChain 复现 Tiptap AI Toolkit 的结构化编辑命令](research/Tiptap%20AI%20Toolkit%20结构化输出研究.md)
+  > **摘要结论**：提供了替代 Tiptap AI Toolkit 的开源蓝图“OpenTiptap”。推荐使用“工具注册表”模式，结合 Vercel AI SDK + Ollama + Zod 进行 Schema 验证。明确指出在本地环境中，**Qwen 2.5 Coder** 是比通用 Chat 模型更优秀的“逻辑引擎”，能更准确地将自然语言转化为 ProseMirror 兼容的结构化 JSON。
+- [解构黑盒与本地化实现方案：用 LangChain 复现 Tiptap AI Toolkit 的结构化编辑命令](research/2026-01-04-2-Tiptap%20AI%20Toolkit%20结构化输出研究.md)
 
   > **研究需求**: 从 https://tiptap.dev/docs/content-ai/capabilities/ai-toolkit/tools/available-tools 来看，似乎可以通过 langchain 完成结构化的输出？但是 ai-toolkit 怎么包装的结构化编辑命令似乎仍然是个黑盒，请向这个方向继续展开研究
+  > **摘要结论**：将 Tiptap AI 解构为“当前选区上下文”+“Schema 感知”的 RAG 系统。提出使用 LangChain.js 编排本地 LLM (Qwen 2.5) 来复现 Schema 感知生成。核心策略是使用 Zod 定义 ProseMirror 节点结构，强迫 LLM 仅输出合法的 JSON/HTML，从而在本地实现 SaaS 级的结构化编辑能力。
 
 **架构决策 (2026.01.04)**：采用 **Ollama + Vercel AI SDK** 方案。
 
-- **模型**: Qwen2.5-Coder-1.5B (本地)
-- **协议**: OpenAI-Compatible API (通过 Ollama Serve)
-- **前端**: Vercel AI SDK (`useChat` + Tool Calling)
-- **详情**: [架构决策文档](research/2026-01-04-decision-ollama-vercel.md) | [Phase 2 实施计划](agent/plan-step2-intelligence.md)
+> - **模型**: Qwen2.5-Coder-1.5B (本地)
+> - **协议**: OpenAI-Compatible API (通过 Ollama Serve)
+> - **前端**: Vercel AI SDK (`useChat` + Tool Calling)
+> - **详情**: [架构决策文档](research/2026-01-04-decision-ollama-vercel.md)
+
+- [本地意图解析架构技术分析报告：Vercel AI SDK、本地大模型与 Qwen 2.5 范式研究](research/2026-01-06-模型选型与输出模式分析.md)
+  > **研究需求**: 目前在处理第二阶段，意图架构。根据前面的研究总结出了[一个决策](research/2026-01-04-decision-ollama-vercel.md) ，目前在选择模型。研究推荐的是 qwen2.5-coder 的小模型。但是里面可能有个误判推荐使用 tool call，参考如下分析
+  >
+  > > 在 Vercel AI SDK 的设计哲学中，这两个参数分工明确，代表了两种不同的“意图”：
+  > >
+  > > 1. 核心区别对比
+  > >    | 特性 | output 参数 | tools + toolChoice |
+  > >    | --- | --- | --- |
+  > >    |主要目的|结构化结果：规定模型最终回答的格式（JSON、数组等）。|外部动作：让模型具备调用函数、查询数据、执行代码的能力。|
+  > >    |执行逻辑|一次性约束：模型在生成结束时必须符合该 Schema。|交互式循环：模型可以多次调用工具，获取结果后再继续生成。|
+  > >    |小模型友好度|高：SDK 通常通过提示词强制约束，容错率较高。|低：依赖模型精确遵循特定的 XML/JSON 协议标签。|
+  > >    |适用场景|指令解析、分类、提取摘要、生成固定格式的配置文件。|天气查询、数据库检索、执行计算、多步推理代理（Agent）。|
+  > >
+  > > 2. 为什么你的场景更适合 output？在你之前的“文本编辑器指令解析”案例中，模型的工作其实是 “翻译”（将自然语言翻译成程序指令）。使用 tools 的风险：正如你观察到的，1.5B 模型很难在每一轮都记住 pigment 这种复杂的协议包装。如果它漏掉一个括号，解析就失败了。使用 output 的优势：SDK 会告诉模型：“无论如何，你只能给我返回一个符合这个 Zod Schema 的 JSON 对象。”对于 Qwen 1.5B 来说，这比记住一套“工具协议”要容易得多。
+  > > 3. toolChoice 的真正作用 toolChoice 是用来精细控制 “交互” 行为的开关：'auto' (默认)：由模型决定是直接回话，还是调用某个工具。'required'：强制模型必须在这一步调用至少一个工具。{ type: 'function', functionName: '...' }：强制模型必须调用指定的某个工具。总结建议：如果你的目标是让模型**“最终吐出一个 JSON 指令”**，那么 output 是最稳健的选择。它绕过了 Ollama 复杂的 TEMPLATE 解析过程，直接利用了模型的 JSON 生成能力。
+  > >
+  > > 请分析合理性并重新思考是否 coder 模型还是最佳模型。
+  > > **摘要结论**：技术对比显示，对于本地小模型（<32B），**结构化输出 (generateObject)** 比 原生工具调用 更可靠。**Qwen 2.5 Coder** 被确认为最佳意图解析引擎，因其代码训练背景使其对形式化结构的遵循度远超 Instruct 版本。建议采用“类型驱动开发”（Schema Engineering）替代传统的 Prompt 工程以提升鲁棒性。
 
 ## 3. 技术选型
 
-- [ASR 方案评估](research/analysis-asr-options.md) - 对比 Web Speech, Whisper WASM, RealtimeSTT 和 Native MLX 方案
+- [ASR 方案评估](research/2025-12-28-analysis-asr-options.md) - 对比 Web Speech, Whisper WASM, RealtimeSTT 和 Native MLX 方案
 - [Agent 架构决策](agent/asr-architecture-decision.md) - **(Agent Reference)** 核心架构决策记录：Frontend VAD + Stateless MLX Backend
 
 ## 4. 实施计划
@@ -59,4 +85,5 @@
 
 - [整体项目计划](agent/plan-overall.md)
 - [第一步实施计划](agent/plan-step1-transcription.md)
-- [Phase 2 实施计划](agent/plan-step2-intelligence.md)
+- [第二步实施计划](agent/plan-step2-minimal-poc.md)
+- [第三步实施计划](agent/plan-step3-intelligence.md)

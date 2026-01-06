@@ -39,8 +39,8 @@
 **自然语言理解（NLU）：**
 
 - **核心方案**：Ollama (Local Inference)
-- **模型**：Qwen2.5-Coder-1.5B-Instruct (JSON/Code Optimized)
-- **框架**：Vercel AI SDK (Frontend) + OpenAI-Compatible API
+- **模型**：Qwen2.5-Coder-1.5B (JSON Optimized)
+- **框架**：Vercel AI SDK (Frontend) + `generateObject`
 - **原则**：仅用于指令解析，禁止内容生成
 
 **语音合成（TTS，可选）：**
@@ -276,8 +276,8 @@ sequenceDiagram
     UI->>ASR: 识别语音
     ASR->>UI: 返回 "删掉高兴"
     UI->>SDK: append("删掉高兴")
-    SDK->>Ollama: Tool Call (deleteText)
-    Ollama->>SDK: JSON { tool: "deleteText", args: { text: "高兴" } }
+    SDK->>Ollama: generateObject (Zod Schema)
+    Ollama->>SDK: JSON { type: "deleteText", args: { text: "高兴" } }
     SDK->>Editor: Dispatch Command
     Editor->>UI: 显示 Diff 预览 (Red Strikethrough)
     UI->>User: 确认?
@@ -333,7 +333,7 @@ sequenceDiagram
 **解决方案（三层防护）：**
 
 1. **System Prompt 约束**：明确禁止生成
-2. **Function Calling Schema 限制**：只允许编辑操作
+2. **Strict Structured Output**：Zod Schema 强制仅输出预定义指令格式
 3. **运行时验证**：检查输出内容是否在原始语音中出现
 
 ### 5.4 中文语音识别准确率

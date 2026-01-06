@@ -32,18 +32,18 @@
   - **Brain**: 直接用 `Ollama` 运行 `qwen2.5-coder:1.5b` (兼容 OpenAI API)。
   - **Adapter**: 前端使用 `Vercel AI SDK` (`useChat` + `Tools`) 直接连接 Ollama。
 - **原因**：
-  - **标准统一**：Vercel SDK 是目前 React 生态事实标准，未来切模型（如 DeepSeek）只需改 URL。
-  - **Tool Calling**: Qwen 2.5 Coder 对 Tool Calling 支持极好，完美契合“指令转函数”的需求。
-  - **极简架构**：去掉了中间的 Python 业务层，浏览器直连模型（Localhost）。
+  - **Standard**: Vercel SDK 是目前 React 生态事实标准，未来切模型（如 DeepSeek）只需改 URL。
+  - **Structured Output**: Qwen 2.5 Coder 对结构化 JSON 支持极好，配合 `generateObject` + Zod Schema 能稳定输出精准指令，避开不同模型 Tool Call 模板的兼容性坑。
+  - **极简架构**: 去掉了中间的 Python 业务层，浏览器直连模型（Localhost）。
 
 ## 3. 最终技术栈
 
-| 模块                   | 技术选型                           | 理由                                                                |
-| :--------------------- | :--------------------------------- | :------------------------------------------------------------------ |
-| **LLM Host**           | **Ollama**                         | 一键安装，兼容 OpenAI API，支持 MacOS 硬件加速。                    |
-| **Model**              | **Qwen2.5-Coder-1.5B**             | 1.5B 参数在 Mac 上延迟 <50ms，且 Coder 版本遵循 JSON 指令能力最强。 |
-| **Frontend Framework** | **Vercel AI SDK (Core)**           | 自动处理 Tool Calling 协议，提供 `useChat` 等优质 Hook。            |
-| **Protocol**           | **Tool Calling (OpenAI Standard)** | 定义 `delete(range)`, `format(style)` 等工具，让 LLM 填参数。       |
+| 模块                   | 技术选型                    | 理由                                                                |
+| :--------------------- | :-------------------------- | :------------------------------------------------------------------ |
+| **LLM Host**           | **Ollama**                  | 一键安装，兼容 OpenAI API，支持 MacOS 硬件加速。                    |
+| **Model**              | **Qwen2.5-Coder-1.5B**      | 1.5B 参数在 Mac 上延迟 <50ms，且 Coder 版本遵循 JSON 指令能力最强。 |
+| **Frontend Framework** | **Vercel AI SDK (Core)**    | 自动处理数据流，提供 `generateObject` 等高级 API。                  |
+| **Protocol**           | **Structured Output (Zod)** | 定义 `intent` Zod Schema，强制模型输出符合类型的 JSON 对象。        |
 
 ## 4. 关键收益
 

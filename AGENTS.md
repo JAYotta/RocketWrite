@@ -59,3 +59,7 @@
 ## 文档索引
 
 详细的系统架构、项目背景与研究、技术选型、实施计划的文档索引请查看 [文档索引](docs/Readme.md)
+
+## 参考资料
+
+- [Vercel AI SDK 文档 (Full)](docs/reference/vercel-llms-full.txt) - 包含 Core, React, and Provider 的完整 API 参考。

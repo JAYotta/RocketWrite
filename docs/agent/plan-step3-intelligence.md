@@ -20,12 +20,12 @@
 ### 2.1 为什么选 Ollama + Qwen Coder?
 
 - **Ollama**: 提供了标准的 OpenAI 兼容接口 (`/v1/chat/completions`)，使得前端可以像调用 GPT-4 一样调用本地模型，零适配成本。
-- **Qwen2.5-Coder**: 经研究验证，Coder 版本在**JSON 结构化输出**和**工具调用 (Tool Calling)** 方面的表现远超同尺寸的 Instruct 模型，且 1.5B 版本在 Mac 上延迟极低 (<50ms)。
+- **Qwen2.5-Coder**: 经研究验证，Coder 版本在**JSON 结构化输出**方面的表现远超同尺寸的 Instruct 模型，且 1.5B 版本在 Mac 上延迟极低 (<50ms)。
 
 ### 2.2 为什么选 Vercel AI SDK?
 
-- **Tool Calling 封装**: 自动处理 LLM 的工具调用协议，将 JSON 映射为前端函数。
-- **流式支持**: 内置 `useChat` hook，自带流式状态管理（Loading, Streaming）。
+- **Structured Output 封装**: `generateObject` 配合 Zod Schema，强制 LLM 输出类型安全的 JSON 对象。
+- **流式支持**: 结合 `streamObject`，支持部分 JSON 解析，实现极速响应。
 - **生态标准**: 目前 React 生态对接 LLM 的事实标准。
 
 ## 3. 实施步骤
@@ -46,14 +46,15 @@
 
 - [x] **依赖安装** (已在 Phase 2 POC 完成)
 - [x] **工具注册表 (Tool Registry) 定义** (已在 Phase 2 POC 完成)
-- [ ] **Tool Registry 集成**:
-  - 在 `useChat` Hook 中集成 Tool Registry
-  - 配置 `onToolCall` 回调处理工具调用
+- [ ] **Intent Handler 集成**:
+  - 在 `useChat` (或 `useActionState`) 中集成 `generateObject`
+  - 配置 Zod Schema 定义意图
+  - 编写 handler 分发意图对象到命令执行器
 - [x] **基础命令执行器** (已在 Phase 2 POC 完成基础版本)
 - [ ] **命令执行器完善**:
   - 实现复杂文本定位逻辑 (`findTextPosition`): "第一段"、"第二句"等
   - 完善各命令的执行函数（处理边界情况）
-  - 实现 Switch-Case 处理器，将 LLM 的 Tool Call 映射为 Tiptap 的 `editor.chain()...run()`
+  - 实现 Switch-Case 处理器，将 LLM 的 Intent Object 映射为 Tiptap 的 `editor.chain()...run()`
 
 ### 3.3 Schema & Context 完整实现
 
