@@ -4,9 +4,10 @@
  * Centralized management of different system prompt versions for A/B testing.
  */
 
-import { createSystemPrompt as v1 } from "./v1-chinese-detailed";
-import { createSystemPrompt as v2 } from "./v2-english-minimal";
-import { createSystemPrompt as v3 } from "./v3-english-code-style";
+import { SYSTEM_PROMPT_V1 as v1 } from "./v1-chinese-detailed";
+import { SYSTEM_PROMPT_V2 as v2 } from "./v2-english-minimal";
+import { SYSTEM_PROMPT_V3 as v3 } from "./v3-english-code-style";
+import type { EditorCommand } from "../../schemas/editor-commands";
 
 export type PromptVersion = "v1" | "v2" | "v3";
 
@@ -43,7 +44,7 @@ export const PROMPT_VERSIONS: Record<PromptVersion, PromptVersionInfo> = {
   },
 };
 
-const PROMPT_FACTORIES: Record<PromptVersion, (context?: string) => string> = {
+const PROMPT_FACTORIES: Record<PromptVersion, string> = {
   v1,
   v2,
   v3,
@@ -55,12 +56,40 @@ const PROMPT_FACTORIES: Record<PromptVersion, (context?: string) => string> = {
 export function getSystemPrompt(
   version: PromptVersion = "v2",
   context?: string,
+  previousCommand?: EditorCommand,
 ): string {
-  const factory = PROMPT_FACTORIES[version];
-  if (!factory) {
+  const basePrompt = PROMPT_FACTORIES[version];
+  if (!basePrompt) {
     throw new Error(`Unknown prompt version: ${version}`);
   }
-  return factory(context);
+
+  // Build context sections
+  const contextSections: string[] = [];
+
+  // Add document context if provided
+  if (context) {
+    const contextLabel = version === "v1" ? "Context" : "Context";
+    contextSections.push(`${contextLabel}: ${context}`);
+  } else {
+    const contextLabel = version === "v1" ? "Context" : "Context";
+    contextSections.push(`${contextLabel}: No context provided.`);
+  }
+
+  // Add previous command context if provided
+  if (previousCommand) {
+    const previousCommandLabel =
+      version === "v1" ? "上一个操作" : "Previous Command";
+    contextSections.push(
+      `${previousCommandLabel}: ${JSON.stringify(previousCommand, null, 2)}`,
+    );
+  }
+
+  // Append all context sections
+  if (contextSections.length > 0) {
+    return basePrompt + "\n\n" + contextSections.join("\n");
+  }
+
+  return basePrompt;
 }
 
 /**

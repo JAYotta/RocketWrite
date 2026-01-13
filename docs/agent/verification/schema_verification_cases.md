@@ -50,6 +50,51 @@ We will use these examples to verify the model's ability to map Natural Language
 | "高亮选中的文字"     | `{"type": "applyFormat", "format": "highlight", "target": "selection"}` | Selection                     |
 | "把第一段便斜体"     | `{"type": "applyFormat", "format": "italic", "target": "第一段"}`       | Typo tolerance ("便" -> "变") |
 
+### 5. Tool: `undo`
+
+| User Intent          | Previous Command Context                                          | Expected JSON Output | Note                   |
+| :------------------- | :---------------------------------------------------------------- | :------------------- | :--------------------- |
+| "撤销上一个操作"     | `{"type": "replaceText", "old": "开心", "new": "兴高采烈"}`       | `{"type": "undo"}`   | Undo replace operation |
+| "撤销刚才插入的文字" | `{"type": "insertText", "text": "我的假期", "position": "start"}` | `{"type": "undo"}`   | Undo insert operation  |
+| "撤销删除"           | `{"type": "deleteText", "target": "第二句"}`                      | `{"type": "undo"}`   | Undo delete operation  |
+| "撤销刚才的修改"     | `{"type": "applyFormat", "format": "bold", "target": "重点"}`     | `{"type": "undo"}`   | Undo format operation  |
+
+### 6. Tool: `redo`
+
+| User Intent      | Previous Command Context                                          | Expected JSON Output | Note                    |
+| :--------------- | :---------------------------------------------------------------- | :------------------- | :---------------------- |
+| "重做"           | `{"type": "replaceText", "old": "开心", "new": "兴高采烈"}`       | `{"type": "redo"}`   | Redo last undone action |
+| "恢复刚才的操作" | `{"type": "insertText", "text": "我的假期", "position": "start"}` | `{"type": "redo"}`   | Redo insert operation   |
+
+### 7. Correction Scenarios (Flexible Implementation)
+
+| User Intent          | Previous Command Context                                    | Expected JSON Output (Option 1) | Expected JSON Output (Option 2)                             | Note                                                             |
+| :------------------- | :---------------------------------------------------------- | :------------------------------ | :---------------------------------------------------------- | :--------------------------------------------------------------- |
+| "改回原来的样子"     | `{"type": "replaceText", "old": "开心", "new": "兴高采烈"}` | `{"type": "undo"}`              | `{"type": "replaceText", "old": "兴高采烈", "new": "开心"}` | Model may use undo (simpler) or reverse replaceText (explicit)   |
+| "把刚才改错的改回来" | `{"type": "replaceText", "old": "开心", "new": "兴高采烈"}` | `{"type": "undo"}`              | `{"type": "replaceText", "old": "兴高采烈", "new": "开心"}` | Both approaches are acceptable; undo is preferred for simplicity |
+
+**Note on Correction**: When the user requests correction, the model may choose either:
+
+- **Option 1 (Preferred)**: Use `undo` command - simpler and leverages editor's history stack
+- **Option 2 (Acceptable)**: Use `replaceText` with reversed values - more explicit but requires model to track the reversal
+
+---
+
+## Context Usage: Previous Command
+
+The system prompt now supports a `previousCommand` parameter that provides context about the last executed operation. This context is used to:
+
+1. **Enable Undo/Redo Operations**: The model can understand what operation to undo/redo based on the previous command context.
+2. **Support Correction Requests**: When users request corrections (e.g., "改回原来的样子"), the model can either use `undo` or reverse the previous operation explicitly.
+
+**Context Format in Prompt**:
+
+```
+Previous Command: { "type": "replaceText", "old": "开心", "new": "兴高采烈" }
+```
+
+**Boundary Case**: When `previousCommand` is `undefined` and user requests undo, the model should return an empty array `[]` or handle gracefully without crashing.
+
 ---
 
 ## Implementation Notes

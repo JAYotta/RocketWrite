@@ -41,12 +41,26 @@ export const ApplyFormatSchema = z.object({
   target: EditorTargetSchema,
 });
 
+export const UndoCommandSchema = z
+  .object({
+    type: z.literal("undo"),
+  })
+  .describe("Undo the last operation. No additional parameters needed.");
+
+export const RedoCommandSchema = z
+  .object({
+    type: z.literal("redo"),
+  })
+  .describe("Redo the last undone operation. No additional parameters needed.");
+
 // Union of all possible editor commands
 export const EditorCommandSchema = z.discriminatedUnion("type", [
   InsertTextSchema,
   DeleteTextSchema,
   ReplaceTextSchema,
   ApplyFormatSchema,
+  UndoCommandSchema,
+  RedoCommandSchema,
 ]);
 
 export type EditorCommand = z.infer<typeof EditorCommandSchema>;
