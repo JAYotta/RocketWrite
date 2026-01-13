@@ -26,7 +26,7 @@
 
 ## 当前状态
 
-**第一阶段：文字转录功能（计划中）**
+**第一阶段：文字转录功能**
 
 - 技术栈：React + TypeScript + Tiptap
 - ASR: MLX Whisper (Stateless Backend) - _RealtimeSTT has been deprecated_
@@ -34,7 +34,16 @@
   - Styling: Tailwind CSS v4
   - Icons: Iconoir React
   - State: React Hooks
-- 状态：已实施语音转写，正在优化 UI
+- 状态：**已完成** (UI 待持续优化)
+
+**第二阶段：智能指令解析 (Minimal POC)**
+
+- 目标：验证本地 LLM 的意图解析能力
+- 技术栈：
+  - **LLM**: Ollama + Qwen2.5-Coder-1.5B
+  - **Framework**: Vercel AI SDK Core (`generateObject`)
+  - **Protocol**: Structured Output (Zod Schema)
+- 状态：**进行中** (准备进入 POC 开发)
 
 **核心痛点**：
 

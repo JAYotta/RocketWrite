@@ -24,7 +24,22 @@
 
 ## 2. 实施步骤
 
-### Step 0: 基础设施搭建 (Infrastructure)
+### Step 0: 定义工具 Schema (Schema Definition)
+
+使用提示词定义 POC 所需的工具 Schema 并验证可行性。
+
+- [x] **Prompt Creation**: [Schema Definition & Verification Prompt](prompts/schema_definition.md)
+- [x] **Schema Implementation**: [`frontend/src/schemas/editor-commands.ts`](../../frontend/src/schemas/editor-commands.ts)
+- [x] **Verification Cases**: [`docs/agent/verification/schema_verification_cases.md`](verification/schema_verification_cases.md)
+
+**完成状态**：
+
+- ✅ 定义了四个核心工具的 Zod Schema（`insertText`, `deleteText`, `replaceText`, `applyFormat`）
+- ✅ 使用 discriminated union 模式，优化小模型输出稳定性
+- ✅ 提供了可行性验证用例和 few-shot 示例
+- ✅ 针对 Qwen 2.5 Coder 1.5B/7B 模型进行了优化设计
+
+### Step 1: 基础设施搭建 (Infrastructure)
 
 > 此步骤已从 Phase 3 前置，作为 POC 的必要条件。
 
@@ -34,10 +49,6 @@
 - [ ] **Project Setup**:
   - 安装依赖: `pnpm install ai zod @ai-sdk/ollama`
   - 安装开发脚本工具: `pnpm install -D tsx`
-
-### Step 1: 环境准备 (已包含在 Step 0)
-
-- [ ] 安装必要的 Dev 依赖: `tsx` (运行 TS 脚本), `ai`, `zod`, `@ai-sdk/ollama`.
 
 ### Step 2: 后端验证脚本 (`scripts/test-backend.ts`)
 

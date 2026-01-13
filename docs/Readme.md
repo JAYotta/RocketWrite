@@ -73,6 +73,17 @@
   > >
   > > 请分析合理性并重新思考是否 coder 模型还是最佳模型。
   > > **摘要结论**：技术对比显示，对于本地小模型（<32B），**结构化输出 (generateObject)** 比 原生工具调用 更可靠。**Qwen 2.5 Coder** 被确认为最佳意图解析引擎，因其代码训练背景使其对形式化结构的遵循度远超 Instruct 版本。建议采用“类型驱动开发”（Schema Engineering）替代传统的 Prompt 工程以提升鲁棒性。
+- [本地优先架构下的 Tiptap AI Toolkit 复刻与深度实施策略报告](research/2026-01-07-复刻%20Tiptap%20AI%20本地实现策略.md)
+  > **研究需求**: replicate the core capabilities of [Tiptap AI Toolkit](https://tiptap.dev/docs/content-ai/capabilities/ai-toolkit) without using their SaaS. The reason is that we cannot access it quickly (requires contacting sales) and are unsure if it fully meets our requirements. Please strictly analyze the implementation path for the following technical challenges. 1. Context Awareness: Direct Injection vs. Tool Calling? 2. Schema Awareness: Is it Necessary? 3. Execution Primitives: Ensuring Executability. Option A (Tiptap Style): The LLM outputs a "ProseMirror Transaction" or "JSON Content" directly? Option B (Intent Style): The LLM outputs a high-level intent `{"action": "delete", "target": "last_sentence"}` and we map it to Tiptap commands in TypeScript?
+  > **摘要结论**：确立了本地复刻 Tiptap AI 的“推式架构”与“结构化意图”路线。拒绝了拉式 Agent（工具调用）模式，改为直接注入 Markdown 上下文（Context Injection）。核心技术路径：**Markdown 序列化 + 动态 Prompt (Schema 感知) + Vercel AI SDK (`generateObject` + Zod Schema)**。对于执行层，推荐采用“混合模式”：编辑指令走原子化的意图解析，生成任务走流式幽灵节点。此方案在 Qwen 2.5 Coder 7B 模型上可实现亚秒级响应与生产级稳定性。
+- [基于意图的结构化指令（Intent-Based Commands）在富文本编辑中的架构演进与成熟度评估报告](research/2026-01-08-意图指令模式成熟度调研.md)
+  > **研究需求**:
+  >
+  > > 4.2 选项 B：意图风格的结构化指令（Intent-Based Commands）
+  > > 工作原理： 我们不让 LLM 重写文本，而是让它生成操作指令。这是一种更高维度的抽象，利用了 LLM 的逻辑推理能力（Code Reasoning）而非单纯的文本生成能力。
+  >
+  > 目前有实践论证这个是否成熟好用吗？
+  > **摘要结论**：报告证实“意图驱动架构”（Option B）已进入早期大众阶段，是构建高可靠 AI 编辑器的必选项。相比传统生成式重写（Option A），意图模式利用 Code LLM 的逻辑推理能力，将模糊指令转化为确定性的结构化操作（JSON -> Transaction），有效规避了“结构性熵增”和 HTML 幻觉。以 Qwen 2.5 Coder 为代表的代码模型在结构化指令生成上表现卓越，配合 Vercel AI SDK 的 Zod 校验，可实现安全的端侧编辑。
 
 ## 3. 技术选型
 
