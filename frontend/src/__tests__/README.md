@@ -38,22 +38,56 @@ Unit tests for Zod schema validation. These tests verify that the command schema
 pnpm test editor-commands
 ```
 
-### `test-backend.test.ts`
+### `llm/` - LLM Integration Tests
 
-Integration tests for LLM command parsing. These tests require Ollama to be running.
+LLM-related tests and utilities are organized in the `llm/` subdirectory.
+
+#### `llm/ollama-integration.test.ts`
+
+Integration tests for Ollama connectivity and basic functionality. Uses a fixed prompt version (v2) to verify that Ollama integration is working correctly.
 
 **Prerequisites:**
 
 - Ollama must be running (`ollama serve`)
-- Model `qwen2.5:1.5b` must be available (`ollama pull qwen2.5:1.5b`)
+- Model `qwen2.5-coder:1.5b` must be available (`ollama pull qwen2.5-coder:1.5b`)
 
 **Run independently:**
 
 ```bash
-pnpm test test-backend
+pnpm test ollama-integration
 ```
 
-**Note:** Tests will be skipped if Ollama is not available.
+**Note:** Tests will fail if Ollama is not available (throws error in `beforeAll`).
+
+#### `llm/prompt-versions.test.ts`
+
+A/B testing for different prompt versions (v1, v2, v3). Compares the performance of different prompt styles to evaluate which works best.
+
+**Prerequisites:**
+
+- Ollama must be running (`ollama serve`)
+- Model `qwen2.5-coder:1.5b` must be available (`ollama pull qwen2.5-coder:1.5b`)
+
+**Run independently:**
+
+```bash
+pnpm test prompt-versions
+```
+
+**Note:** Tests will fail if Ollama is not available (throws error in `beforeAll`).
+
+#### `llm/helpers.ts`
+
+Shared utilities for LLM tests:
+- `checkOllamaAvailable()` - Check if Ollama is available and the required model exists
+- `generateCommand()` - Generate command from LLM using Ollama
+- `validateSafetyTest()` - Default validation for safety tests
+
+#### `llm/test-cases.ts`
+
+Test case definitions:
+- `TestCase` interface
+- `TEST_CASES` array - All test cases with their validation logic
 
 ### `tiptap-editor.test.tsx`
 
@@ -73,7 +107,7 @@ Use `editor-commands.test.ts` as a template. These are pure unit tests with no e
 
 ### For LLM Integration Tests
 
-Use `test-backend.test.ts` as a template. Always check for Ollama availability and use `it.skipIf()` for conditional execution.
+Use `llm/ollama-integration.test.ts` or `llm/prompt-versions.test.ts` as templates. Always check for Ollama availability using `checkOllamaAvailable()` from `llm/helpers.ts`. The test suite will fail early if Ollama is not available (using `beforeAll` + `throw Error`).
 
 ### For React Component Tests
 
@@ -104,5 +138,5 @@ describe("MyComponent", () => {
 ## Notes
 
 - LLM tests have a 30s timeout
-- Tests automatically skip if Ollama is unavailable
-- Use `it.skipIf()` for conditional test execution
+- LLM integration tests will fail early if Ollama is not available (throws error in `beforeAll`)
+- Use `checkOllamaAvailable()` from `llm/helpers.ts` for Ollama availability checks
