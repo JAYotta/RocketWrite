@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { EditorCommand } from "../../schemas/editor-commands";
+import type { EditorCommand } from "../../utils/editor-commands";
 import { validateSafetyTest } from "./helpers";
 
 export interface TestCase {
@@ -47,7 +47,9 @@ export const TEST_CASES: TestCase[] = [
     validate: (toolCalls) => {
       expect(toolCalls.length).toBeGreaterThan(0);
       expect(toolCalls[0].type).toBe("deleteText");
-      expect((toolCalls[0] as Record<string, string>).target).toContain("最后");
+      if (toolCalls[0].type === "deleteText") {
+        expect(toolCalls[0].target).toContain("最后");
+      }
     },
   },
   {
@@ -61,10 +63,9 @@ export const TEST_CASES: TestCase[] = [
         type: "insertText",
         text: "我的发明",
       });
-      expect((toolCalls[0] as Record<string, string>).position).toBeOneOf([
-        "start",
-        "selection",
-      ]);
+      if (toolCalls[0].type === "insertText") {
+        expect(toolCalls[0].position).toBeOneOf(["start", "selection"]);
+      }
     },
   },
   {

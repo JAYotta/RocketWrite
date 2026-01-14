@@ -7,7 +7,7 @@
 import { SYSTEM_PROMPT_V1 as v1 } from "./v1-chinese-detailed";
 import { SYSTEM_PROMPT_V2 as v2 } from "./v2-english-minimal";
 import { SYSTEM_PROMPT_V3 as v3 } from "./v3-english-code-style";
-import type { EditorCommand } from "../../schemas/editor-commands";
+import type { EditorCommand } from "../../utils/editor-commands";
 
 export type PromptVersion = "v1" | "v2" | "v3";
 

@@ -89,15 +89,41 @@ Test case definitions:
 - `TestCase` interface
 - `TEST_CASES` array - All test cases with their validation logic
 
-### `tiptap-editor.test.tsx`
+### `editor/` - Editor Integration Tests
+
+Editor-related tests are organized in the `editor/` subdirectory.
+
+#### `editor/tiptap-commands.test.tsx`
 
 Unit tests for Tiptap editor commands. These tests verify editor functionality without rendering.
 
 **Run independently:**
 
 ```bash
-pnpm test tiptap-editor
+pnpm test tiptap-commands
 ```
+
+#### `editor/command-executor.test.ts`
+
+Integration tests for `commandExecutor` with Tiptap Editor. Tests that `EditorCommand` objects are correctly executed and produce expected results.
+
+**Run independently:**
+
+```bash
+pnpm test command-executor
+```
+
+**Test coverage:**
+- All command types (insertText, deleteText, replaceText, applyFormat, undo, redo)
+- Editor state changes (HTML content, formatting)
+- Edge cases (empty document, no selection)
+- Undo/redo functionality
+
+#### `editor/helpers.ts`
+
+Shared utilities for editor tests:
+- `createTestEditor()` - Create a test editor instance with StarterKit
+- `getTextContent()` - Get plain text content from editor
 
 ## Writing New Tests
 
@@ -108,6 +134,10 @@ Use `editor-commands.test.ts` as a template. These are pure unit tests with no e
 ### For LLM Integration Tests
 
 Use `llm/ollama-integration.test.ts` or `llm/prompt-versions.test.ts` as templates. Always check for Ollama availability using `checkOllamaAvailable()` from `llm/helpers.ts`. The test suite will fail early if Ollama is not available (using `beforeAll` + `throw Error`).
+
+### For Editor Integration Tests
+
+Use `editor/command-executor.test.ts` or `editor/tiptap-commands.test.tsx` as templates. Use `createTestEditor()` from `editor/helpers.ts` to create test editor instances. Mock external dependencies like `sonner` toast notifications when needed.
 
 ### For React Component Tests
 

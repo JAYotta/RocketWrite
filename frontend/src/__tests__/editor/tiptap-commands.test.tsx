@@ -1,6 +1,10 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { createTestEditor } from "./helpers";
 
 /**
  * Unit tests for Tiptap Editor commands
@@ -13,10 +17,7 @@ describe("Tiptap Editor Commands", () => {
   let editor: Editor;
 
   beforeEach(() => {
-    editor = new Editor({
-      extensions: [StarterKit],
-      content: "<p>Hello World</p>",
-    });
+    editor = createTestEditor("<p>Hello World</p>");
   });
 
   afterEach(() => {

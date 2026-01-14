@@ -1,9 +1,7 @@
 import { generateObject } from "ai";
 import { ollama } from "ai-sdk-ollama";
-import {
-  EditorCommandListSchema,
-  type EditorCommand,
-} from "../../schemas/editor-commands";
+import { EditorCommandListSchema } from "../../schemas/editor-commands";
+import type { EditorCommand } from "../../utils/editor-commands";
 import { expect } from "vitest";
 
 const MODEL_NAME = "qwen2.5-coder:1.5b";
