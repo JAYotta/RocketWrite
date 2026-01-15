@@ -18,19 +18,15 @@ describe("Ollama Integration", () => {
   const PROMPT_VERSION = "v2" as const;
 
   TEST_CASES.forEach((testCase) => {
-    it(
-      testCase.name,
-      { timeout: 30000 },
-      async () => {
-        const systemPrompt = getSystemPrompt(
-          PROMPT_VERSION,
-          testCase.context,
-          testCase.previousCommand,
-        );
+    it(testCase.name, { timeout: 30000 }, async () => {
+      const systemPrompt = getSystemPrompt(
+        PROMPT_VERSION,
+        testCase.context,
+        testCase.previousCommand,
+      );
 
-        const toolCalls = await generateCommand(systemPrompt, testCase.prompt);
-        testCase.validate(toolCalls);
-      },
-    );
+      const toolCalls = await generateCommand(systemPrompt, testCase.prompt);
+      testCase.validate(toolCalls);
+    });
   });
 });

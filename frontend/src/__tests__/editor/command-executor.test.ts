@@ -33,11 +33,10 @@ describe("Command Executor Integration", () => {
   });
 
   describe("insertText", () => {
-    it("should insert text at selection (default)", () => {
+    it("should insert text at selection (default, no target)", () => {
       const command: EditorCommand = {
         type: "insertText",
         text: "New Text",
-        position: "selection",
       };
 
       const result = executeCommand(editor, command);
@@ -46,12 +45,12 @@ describe("Command Executor Integration", () => {
       expect(getTextContent(editor)).toContain("New Text");
     });
 
-    it("should insert text at start", () => {
+    it("should insert text at documentStart", () => {
       editor.commands.setContent("<p>Original</p>");
       const command: EditorCommand = {
         type: "insertText",
         text: "Prefix ",
-        position: "start",
+        target: "documentStart",
       };
 
       const result = executeCommand(editor, command);
@@ -61,12 +60,12 @@ describe("Command Executor Integration", () => {
       expect(content).toContain("Prefix Original");
     });
 
-    it("should insert text at end", () => {
+    it("should insert text at documentEnd", () => {
       editor.commands.setContent("<p>Original</p>");
       const command: EditorCommand = {
         type: "insertText",
         text: " Suffix",
-        position: "end",
+        target: "documentEnd",
       };
 
       const result = executeCommand(editor, command);
@@ -74,6 +73,37 @@ describe("Command Executor Integration", () => {
       expect(result.success).toBe(true);
       const content = getTextContent(editor);
       expect(content).toContain("Original Suffix");
+    });
+
+    it("should insert text at specific position", () => {
+      editor.commands.setContent("<p>Hello World</p>");
+      // Position 6 is after "Hello" (H=1, e=2, l=3, l=4, o=5, space=6 in Tiptap)
+      const command: EditorCommand = {
+        type: "insertText",
+        text: " Beautiful",
+        target: 6,
+      };
+
+      const result = executeCommand(editor, command);
+
+      expect(result.success).toBe(true);
+      const content = getTextContent(editor);
+      expect(content).toContain("Hello Beautiful World");
+    });
+
+    it("should insert text at selection when target is 'selection'", () => {
+      editor.commands.setContent("<p>Hello World</p>");
+      editor.commands.selectAll();
+      const command: EditorCommand = {
+        type: "insertText",
+        text: "New",
+        target: "selection",
+      };
+
+      const result = executeCommand(editor, command);
+
+      expect(result.success).toBe(true);
+      expect(getTextContent(editor)).toContain("New");
     });
   });
 
@@ -90,25 +120,23 @@ describe("Command Executor Integration", () => {
       const result = executeCommand(editor, command);
 
       expect(result.success).toBe(true);
-      expect(vi.mocked(toast.info)).toHaveBeenCalled();
       // Selection deletion should work
       expect(getTextContent(editor).trim()).toBe("");
     });
 
-    it("should show toast for descriptive target", () => {
+    it("should delete text at specific range", () => {
       editor.commands.setContent("<p>Hello World</p>");
 
       const command: EditorCommand = {
         type: "deleteText",
-        target: "第一段",
+        target: { from: 0, to: 5 },
       };
 
       const result = executeCommand(editor, command);
 
       expect(result.success).toBe(true);
-      expect(vi.mocked(toast.info)).toHaveBeenCalledWith(
-        expect.stringContaining("第一段"),
-      );
+      expect(getTextContent(editor)).toContain("World");
+      expect(getTextContent(editor)).not.toContain("Hello");
     });
   });
 
@@ -163,24 +191,6 @@ describe("Command Executor Integration", () => {
       expect(result.success).toBe(true);
       expect(editor.getHTML()).toContain("<em>");
     });
-
-    it("should handle highlight format when extension not available", () => {
-      editor.commands.setContent("<p>Hello World</p>");
-      editor.commands.selectAll();
-
-      const command: EditorCommand = {
-        type: "applyFormat",
-        format: "highlight",
-        target: "selection",
-      };
-
-      const result = executeCommand(editor, command);
-
-      // StarterKit doesn't include Highlight extension
-      // Command should fail gracefully
-      expect(result.success).toBe(false);
-      expect(result.message).toContain("Highlight extension is not available");
-    });
   });
 
   describe("undo", () => {
@@ -196,7 +206,7 @@ describe("Command Executor Integration", () => {
       executeCommand(editor, {
         type: "insertText",
         text: "New ",
-        position: "start",
+        target: "documentStart",
       });
 
       expect(editor.getHTML()).not.toBe(originalContent);
@@ -227,7 +237,7 @@ describe("Command Executor Integration", () => {
       executeCommand(editor, {
         type: "insertText",
         text: "New ",
-        position: "start",
+        target: "documentStart",
       });
 
       const changedContent = editor.getHTML();
@@ -256,7 +266,6 @@ describe("Command Executor Integration", () => {
       const command: EditorCommand = {
         type: "insertText",
         text: "Hello",
-        position: "selection",
       };
 
       const result = executeCommand(editor, command);

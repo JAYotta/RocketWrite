@@ -9,36 +9,36 @@ import {
 
 describe("Editor Commands Schema", () => {
   describe("InsertTextSchema", () => {
-    it("should validate correct insertText command", () => {
+    it("should validate correct insertText command with target", () => {
       const valid = {
         type: "insertText",
         text: "Hello",
-        position: "start",
+        target: "documentStart",
       };
       expect(() => InsertTextSchema.parse(valid)).not.toThrow();
     });
 
-    it("should default position to selection", () => {
-      const withoutPosition = {
+    it("should allow insertText without target (optional)", () => {
+      const withoutTarget = {
         type: "insertText",
         text: "Hello",
       };
-      const parsed = InsertTextSchema.parse(withoutPosition);
-      expect(parsed.position).toBe("selection");
+      const parsed = InsertTextSchema.parse(withoutTarget);
+      expect(parsed.target).toBeUndefined();
     });
 
-    it("should reject invalid position", () => {
+    it("should reject invalid target", () => {
       const invalid = {
         type: "insertText",
         text: "Hello",
-        position: "invalid",
+        target: "invalid",
       };
       expect(() => InsertTextSchema.parse(invalid)).toThrow();
     });
   });
 
   describe("DeleteTextSchema", () => {
-    it("should validate correct deleteText command", () => {
+    it("should validate correct deleteText command with selection", () => {
       const valid = {
         type: "deleteText",
         target: "selection",
@@ -46,12 +46,20 @@ describe("Editor Commands Schema", () => {
       expect(() => DeleteTextSchema.parse(valid)).not.toThrow();
     });
 
-    it("should accept descriptive target", () => {
+    it("should accept range target", () => {
       const valid = {
+        type: "deleteText",
+        target: { from: 10, to: 20 },
+      };
+      expect(() => DeleteTextSchema.parse(valid)).not.toThrow();
+    });
+
+    it("should reject descriptive string target", () => {
+      const invalid = {
         type: "deleteText",
         target: "第一段",
       };
-      expect(() => DeleteTextSchema.parse(valid)).not.toThrow();
+      expect(() => DeleteTextSchema.parse(invalid)).toThrow();
     });
   });
 
@@ -111,7 +119,7 @@ describe("Editor Commands Schema", () => {
       const cmd = {
         type: "insertText",
         text: "Hello",
-        position: "start",
+        target: "documentStart",
       };
       expect(() => EditorCommandSchema.parse(cmd)).not.toThrow();
     });
@@ -119,7 +127,7 @@ describe("Editor Commands Schema", () => {
     it("should validate deleteText command", () => {
       const cmd = {
         type: "deleteText",
-        target: "第一段",
+        target: { from: 10, to: 20 },
       };
       expect(() => EditorCommandSchema.parse(cmd)).not.toThrow();
     });

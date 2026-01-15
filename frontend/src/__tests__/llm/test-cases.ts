@@ -45,11 +45,11 @@ export const TEST_CASES: TestCase[] = [
     context:
       "RocketWrite 是一款[选区开始]专为儿童设计[选区结束]的效率工具，旨在帮助小学生快速通过语音完成作文草稿。",
     validate: (toolCalls) => {
-      expect(toolCalls.length).toBeGreaterThan(0);
-      expect(toolCalls[0].type).toBe("deleteText");
-      if (toolCalls[0].type === "deleteText") {
-        expect(toolCalls[0].target).toContain("最后");
-      }
+      expect(toolCalls.length).toBe(1);
+      expect(toolCalls[0]).toEqual({
+        type: "deleteText",
+        target: { from: expect.any(Number), to: expect.any(Number) },
+      });
     },
   },
   {
@@ -62,10 +62,20 @@ export const TEST_CASES: TestCase[] = [
       expect(toolCalls[0]).toMatchObject({
         type: "insertText",
         text: "我的发明",
+        target: "documentStart",
       });
-      if (toolCalls[0].type === "insertText") {
-        expect(toolCalls[0].position).toBeOneOf(["start", "selection"]);
-      }
+    },
+  },
+  {
+    name: "Insert - without target (default behavior)",
+    prompt: "插入文字'测试'",
+    context: "Hello World",
+    validate: (toolCalls) => {
+      expect(toolCalls.length).toBe(1);
+      expect(toolCalls[0]).toEqual({
+        type: "insertText",
+        text: "测试",
+      });
     },
   },
   {
@@ -100,7 +110,7 @@ export const TEST_CASES: TestCase[] = [
     previousCommand: {
       type: "insertText",
       text: "我的假期",
-      position: "start",
+      target: "documentStart",
     },
     validate: (toolCalls) => {
       expect(toolCalls.length).toBeGreaterThan(0);
@@ -116,7 +126,7 @@ export const TEST_CASES: TestCase[] = [
       "RocketWrite 是一款专为儿童设计的效率工具，旨在帮助小学生快速通过语音完成作文草稿。",
     previousCommand: {
       type: "deleteText",
-      target: "第二句",
+      target: { from: 10, to: 20 },
     },
     validate: (toolCalls) => {
       expect(toolCalls.length).toBeGreaterThan(0);
@@ -153,17 +163,16 @@ export const TEST_CASES: TestCase[] = [
       new: "兴高采烈",
     },
     validate: (toolCalls) => {
-      expect(toolCalls.length).toBeGreaterThan(0);
+      expect(toolCalls.length).toBe(1);
       // Model might use undo or reverse the replaceText
       if (toolCalls[0].type === "undo") {
         expect(toolCalls[0]).toEqual({ type: "undo" });
       } else if (toolCalls[0].type === "replaceText") {
-        const replaceCmd = toolCalls[0] as Extract<
-          EditorCommand,
-          { type: "replaceText" }
-        >;
-        expect(replaceCmd.old).toBe("兴高采烈");
-        expect(replaceCmd.new).toBe("开心");
+        expect(toolCalls[0]).toEqual({
+          type: "replaceText",
+          old: "兴高采烈",
+          new: "开心",
+        });
       } else {
         expect.fail(`Expected undo or replaceText, got ${toolCalls[0].type}`);
       }
@@ -176,5 +185,52 @@ export const TEST_CASES: TestCase[] = [
       "RocketWrite 是一款专为儿童设计的效率工具，旨在帮助小学生快速通过语音完成作文草稿。",
     previousCommand: undefined,
     validate: validateSafetyTest,
+  },
+  // EXPERIMENTAL: Range coordinate tests - testing if small model can output numeric coordinates, @TODO replace with more oral tests
+  {
+    name: "Range Test - Delete with coordinates",
+    prompt: "删除从第10个字符到第20个字符",
+    context: "Hello World This is a test document with some content.",
+    validate: (toolCalls) => {
+      expect(toolCalls.length).toBe(1);
+      expect(toolCalls[0]).toEqual({
+        type: "deleteText",
+        target: {
+          from: 10,
+          to: 20,
+        },
+      });
+    },
+  },
+  {
+    name: "Range Test - Format with coordinates",
+    prompt: "把第5到第15个字符加粗",
+    context: "Hello World This is a test document with some content.",
+    validate: (toolCalls) => {
+      expect(toolCalls.length).toBe(1);
+      expect(toolCalls[0]).toEqual({
+        type: "applyFormat",
+        format: "bold",
+        target: {
+          from: 5,
+          to: 15,
+        },
+      });
+    },
+  },
+  {
+    name: "Range Test - Delete with explicit range",
+    prompt: "删除位置10到20之间的文字",
+    context: "Hello World This is a test document with some content.",
+    validate: (toolCalls) => {
+      expect(toolCalls.length).toBe(1);
+      expect(toolCalls[0]).toEqual({
+        type: "deleteText",
+        target: {
+          from: 10,
+          to: 20,
+        },
+      });
+    },
   },
 ];

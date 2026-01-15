@@ -22,44 +22,69 @@ export const executeCommand = (
   try {
     switch (command.type) {
       case "insertText": {
-        const { text, position = "selection" } = command;
-        if (position === "end") {
-          editor
-            .chain()
-            .focus()
-            .insertContentAt(editor.state.doc.content.size, text)
-            .run();
-        } else if (position === "start") {
-          editor.chain().focus().insertContentAt(0, text).run();
-        } else {
+        const { text, target } = command;
+
+        // If no target provided or target is 'selection', use default insertContent behavior
+        if (!target || target === "selection") {
           editor.chain().focus().insertContent(text).run();
+          return {
+            success: true,
+            message: `Inserted "${text}" at current selection`,
+          };
         }
-        return { success: true, message: `Inserted "${text}" at ${position}` };
+
+        // Handle position types
+        let position;
+        switch (target) {
+          case "documentEnd":
+            position = editor.state.doc.content.size;
+            break;
+          case "documentStart":
+            position = 0;
+            break;
+          case "selectionStart":
+            position = editor.state.selection.from;
+            break;
+          case "selectionEnd":
+            position = editor.state.selection.to;
+            break;
+          default:
+            position = target;
+        }
+
+        editor.chain().focus().insertContentAt(position, text).run();
+
+        return {
+          success: true,
+          message: `Inserted "${text}" at ${JSON.stringify(target)}${typeof position === "number" ? `(${position})` : ""}`,
+        };
       }
 
       case "deleteText": {
         const { target } = command;
-        // POC: For now, just show a toast, real logic needs NLP or rigid mapping
-        toast.info(`AI wants to delete: ${target}`);
-        // Basic fallback: if target matches selection text, delete selection
-        const selectionText = editor.state.selection
-          .content()
-          .content.textBetween(
-            0,
-            editor.state.selection.content().content.size,
-          );
-        if (selectionText && target.includes("selection")) {
+
+        if (target === "selection") {
           editor.chain().focus().deleteSelection().run();
           return { success: true, message: "Deleted selection" };
+        } else {
+          // target is {from, to}
+          editor
+            .chain()
+            .focus()
+            .deleteRange({ from: target.from, to: target.to })
+            .run();
+          return {
+            success: true,
+            message: `Deleted range ${target.from}-${target.to}`,
+          };
         }
-        return { success: true, message: `Simulated deletion of "${target}"` };
       }
 
       case "replaceText": {
         const { old: oldText, new: newText } = command;
         toast.info(`AI replacing "${oldText}" with "${newText}"`);
         // Simple string replace in current selection or document (POC)
-        // Real implementation would use searchAndReplace or similar
+        // @TODO: Real implementation would use searchAndReplace or similar
         return {
           success: true,
           message: `Replaced "${oldText}" with "${newText}"`,
@@ -68,35 +93,27 @@ export const executeCommand = (
 
       case "applyFormat": {
         const { format, target } = command;
-        if (format === "bold") {
-          editor.chain().focus().toggleBold().run();
-        } else if (format === "italic") {
-          editor.chain().focus().toggleItalic().run();
-        } else if (format === "highlight") {
-          // Try to use highlight extension, but it may not be available
-          try {
-            // Check if toggleHighlight method exists (requires Highlight extension)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const chain = editor.chain().focus() as any;
-            if (typeof chain.toggleHighlight === "function") {
-              chain.toggleHighlight({ color: "yellow" }).run();
-            } else {
-              return {
-                success: false,
-                message: "Highlight extension is not available",
-              };
-            }
-          } catch {
-            return {
-              success: false,
-              message: "Highlight extension is not available",
-            };
-          }
+        let chainedCommand = editor.chain();
+
+        // If not selection, set text selection first
+        if (target !== "selection") {
+          chainedCommand = chainedCommand.setTextSelection({
+            from: target.from,
+            to: target.to,
+          });
         }
-        return {
-          success: true,
-          message: `Applied format ${format} to ${target}`,
-        };
+
+        // Apply format
+        switch (format) {
+          case "bold":
+            chainedCommand = chainedCommand.toggleBold();
+            break;
+          case "italic":
+            chainedCommand = chainedCommand.toggleItalic();
+            break;
+        }
+        chainedCommand.run();
+        return { success: true, message: `Applied format ${format}` };
       }
 
       case "undo": {
@@ -111,9 +128,7 @@ export const executeCommand = (
 
       default: {
         // TypeScript exhaustive check - this should never be reached if all command types are handled
-        const commandType = (command as { type: string }).type;
-        // Use the command to satisfy TypeScript's exhaustive check
-        void command; // Suppress unused variable warning
+        const { type: commandType } = command;
         console.warn(`Unknown command type: ${commandType}`);
         return {
           success: false,

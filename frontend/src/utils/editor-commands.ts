@@ -3,21 +3,36 @@
 // for editor operations.
 
 /**
- * Position where text can be inserted
- */
-export type EditorPosition = "selection" | "start" | "end";
-
-/**
  * Format types supported by the editor
+ * @TODO: Add more formats if needed (e.g. highlight, code, heading, etc.)
  */
-export type EditorFormat = "bold" | "italic" | "highlight";
+export type EditorFormat = "bold" | "italic";
 
 /**
- * Target description for text operations
- * Can be 'selection' for currently selected text, or a descriptive string
- * (e.g., 'the first paragraph', 'the word happy')
+ * Range for text operations (delete/format)
+ * Only supports 'selection' or range coordinates
  */
-export type EditorTarget = string;
+export type EditorRange =
+  | "selection" // Use current selection
+  | { from: number; to: number }; // Specific range coordinates
+
+/**
+ * Position for text insertion
+ * Supports various position types (point operations, not range)
+ * Does NOT include 'selection', as insertion without target defaults to current selection
+ */
+export type EditorPosition =
+  | number // Specific position
+  | "selectionStart" // Start of current selection
+  | "selectionEnd" // End of current selection
+  | "documentStart" // Document start
+  | "documentEnd"; // Document end
+
+/**
+ * Combined target type for insertText (supports both position and range)
+ * Currently only used for insertText's optional target field
+ */
+export type EditorTarget = EditorPosition | EditorRange;
 
 /**
  * Command to insert text at a specific position
@@ -25,7 +40,7 @@ export type EditorTarget = string;
 export interface InsertTextCommand {
   type: "insertText";
   text: string;
-  position?: EditorPosition; // Defaults to "selection" if not specified
+  target?: EditorTarget; // Optional: if not provided, use insertContent(text) at current selection
 }
 
 /**
@@ -33,7 +48,7 @@ export interface InsertTextCommand {
  */
 export interface DeleteTextCommand {
   type: "deleteText";
-  target: EditorTarget;
+  target: EditorRange; // Only 'selection' or {from, to}
 }
 
 /**
@@ -51,7 +66,7 @@ export interface ReplaceTextCommand {
 export interface ApplyFormatCommand {
   type: "applyFormat";
   format: EditorFormat;
-  target: EditorTarget;
+  target: EditorRange; // Only 'selection' or {from, to}
 }
 
 /**

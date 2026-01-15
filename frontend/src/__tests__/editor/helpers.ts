@@ -8,7 +8,7 @@ export function createTestEditor(
   content: string = "<p>Hello World</p>",
 ): Editor {
   return new Editor({
-    extensions: [StarterKit],
+    extensions: [StarterKit], // @TODO: Add Highlight extension for highlight format
     content,
   });
 }

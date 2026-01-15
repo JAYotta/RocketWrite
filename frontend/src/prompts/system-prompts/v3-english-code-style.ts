@@ -34,8 +34,10 @@ Constraints:
 
 Examples:
 parse("把选中的文字标红") -> [{ type: "applyFormat", format: "highlight", target: "selection" }]
-parse("删除第二句") -> [{ type: "deleteText", target: "第二句" }]
+parse("删除从第10个字符到第20个字符") -> [{ type: "deleteText", target: { from: 10, to: 20 } }]
 parse("把'开心'换成'兴高采烈'") -> [{ type: "replaceText", old: "开心", new: "兴高采烈" }]
+parse("在开头插入标题") -> [{ type: "insertText", text: "标题", target: "documentStart" }]
+parse("插入文字") -> [{ type: "insertText", text: "文字" }]
 parse("撤销上一个操作") -> [{ type: "undo" }]
 parse("重做") -> [{ type: "redo" }]
 parse("撤销刚才的修改") -> [{ type: "undo" }]
