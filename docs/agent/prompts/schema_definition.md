@@ -76,9 +76,11 @@ The Schema Definition and Verification have been implemented:
 
 1. **Schema Definition**: [`frontend/src/schemas/editor-commands.ts`](../../../frontend/src/schemas/editor-commands.ts)
 
-   - Defines four core tools: `insertText`, `deleteText`, `replaceText`, `applyFormat`
+   - Defines six core commands: `insertText`, `deleteText`, `replaceText`, `applyFormat`, `undo`, `redo`
    - Uses Zod schemas with discriminated union pattern
+   - Type separation: `EditorPosition` for insert operations, `EditorRange` for delete/format operations
    - Optimized for Qwen 2.5 Coder 1.5B/7B model constraints
+   - Supports range coordinates `{from, to}` based on testing results
 
 2. **Verification Test Cases**: [`docs/agent/verification/schema_verification_cases.md`](../../verification/schema_verification_cases.md)
    - Provides feasibility reasoning for small model compatibility
@@ -88,7 +90,11 @@ The Schema Definition and Verification have been implemented:
 **Key Design Decisions:**
 
 - **Structured Output Pattern**: Using `generateObject` with Zod Schema instead of native Tool Calling
-- **Simple Target Descriptions**: Using string descriptions (e.g., "第一段") instead of complex coordinates
+- **Type Separation**: Separated `EditorPosition` (for insertText) and `EditorRange` (for deleteText/applyFormat)
+  - `insertText` uses optional `target?: EditorTarget` (includes both position and range)
+  - `deleteText` and `applyFormat` only use `EditorRange` (supports "selection" or {from, to} coordinates)
+- **Default Behavior**: If `insertText` target is not provided, directly calls `insertContent(text)` (Tiptap default)
+- **Range Coordinate Support**: Testing confirms small models can output range coordinates `{from: number, to: number}`
 - **Explicit Text Matching**: `replaceText` requires `old` field for robust matching
 - **Enum Constraints**: Limited format types to `['bold', 'italic', 'highlight']` to prevent hallucinations
 

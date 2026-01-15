@@ -58,7 +58,10 @@
 
 ### 3.3 Schema & Context 完整实现
 
-- [x] **Schema 提取工具** (已在 Phase 2 POC 完成基础版本)
+- [ ] **Schema 提取工具** (Phase 2 POC 中标记为未来考虑，Phase 3 需要实现):
+  - 创建 `frontend/src/utils/schemaExtractor.ts`
+  - 实现 `extractSchemaInfo(editor)` 函数
+  - 提取当前编辑器支持的 nodes 和 marks
 - [ ] **Schema 约束注入**:
   - 在每次请求前提取 Schema 信息
   - 将 Schema 信息注入 System Prompt

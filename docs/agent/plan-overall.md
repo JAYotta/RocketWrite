@@ -95,23 +95,25 @@
 
 **功能清单：**
 
-- [ ] **Infrastructure Setup (基础设施前置)**:
-  - [ ] Ollama 服务搭建 (Qwen2.5-Coder-1.5B)
-  - [ ] Vercel AI SDK 依赖安装 (`ai`, `zod`, `@ai-sdk/ollama`)
-- [ ] **Tool Registry 定义 (前置)**:
-  - [ ] 定义核心工具的 Zod Schema (`insertText`, `deleteText`, `replaceText`, `applyFormat`)
-  - [ ] 创建工具定义文件 (`frontend/src/schemas/editor-commands.ts`)
-  - [ ] 注：完整集成在阶段三，但定义需要在阶段二完成（供测试使用）
-- [ ] **基础命令执行器 (前置)**:
-  - [ ] 实现基础的命令执行函数（至少支持简单场景）
-  - [ ] 创建命令执行器文件 (`frontend/src/utils/commandExecutor.ts`)
-  - [ ] 注：完整实现（包括复杂文本定位）在阶段三，但基础版本需要在阶段二完成（供 Mock 测试使用）
-- [ ] **Schema 提取工具**:
+- [x] **Infrastructure Setup (基础设施前置)**:
+  - [x] Ollama 服务搭建 (Qwen2.5-Coder-1.5B) ✅ 已完成
+  - [x] Vercel AI SDK 依赖安装 (`ai`, `zod`, `ai-sdk-ollama`) ✅ 已完成
+- [x] **Tool Registry 定义 (前置)**:
+  - [x] 定义核心工具的 Zod Schema (`insertText`, `deleteText`, `replaceText`, `applyFormat`, `undo`, `redo`) ✅ 已完成
+  - [x] 创建工具定义文件 (`frontend/src/schemas/editor-commands.ts`) ✅ 已完成
+  - [x] 创建核心类型文件 (`frontend/src/utils/editor-commands.ts`) ✅ 已完成
+  - [x] 注：完整集成在阶段三，但定义需要在阶段二完成（供测试使用）✅ 已完成
+- [x] **基础命令执行器 (前置)**:
+  - [x] 实现基础的命令执行函数（支持所有命令类型）✅ 已完成
+  - [x] 创建命令执行器文件 (`frontend/src/utils/commandExecutor.ts`) ✅ 已完成
+  - [x] 支持 range 坐标操作 ✅ 已完成
+  - [x] 注：完整实现（包括复杂文本定位）在阶段三，但基础版本需要在阶段二完成（供测试使用）✅ 已完成
+- [ ] **Schema 提取工具** (未来考虑):
   - [ ] 实现 Schema 信息提取函数 (`extractSchemaInfo`)
-  - [ ] 用于测试 Schema Awareness
+  - [ ] 注：当前 Schema 固定，可在 System Prompt 中硬编码；动态扩展时再实现
 - [ ] **Validation (双侧验证)**:
   - [ ] 后端脚本验证 (`scripts/test-backend.ts`) - 使用 Tool Registry 定义验证输出
-  - [ ] 前端 Mock 环境 (`frontend/src/utils/mock-provider.ts`) - 使用命令执行器验证 UI
+  - [x] 单元测试验证 (`frontend/src/__tests__/`) - 使用命令执行器验证执行逻辑 ✅ 已完成
 
 **技术方案：**
 
@@ -135,7 +137,7 @@
   - [ ] 实现文本定位逻辑 (`findTextPosition`)
   - [ ] 意图分类与参数提取（LLM 调用）
 - [ ] **Schema & Context 完整实现**:
-  - [x] Schema 提取（已在阶段二完成基础版本）
+  - [ ] Schema 提取工具实现（阶段二标记为未来考虑，阶段三需要实现）
   - [ ] Schema 约束注入到 System Prompt（完整实现）
   - [ ] Context 提取（滑动窗口策略）
   - [ ] Context 注入到请求

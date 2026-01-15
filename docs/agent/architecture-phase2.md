@@ -16,56 +16,28 @@
 
 ### 2.1 核心工具列表
 
-| Tool Name     | Description        | Parameters (Zod Schema)                                                                    |
-| :------------ | :----------------- | :----------------------------------------------------------------------------------------- |
-| `insertText`  | 在指定位置插入文本 | `text`: string, `position`: "cursor" \| "start" \| "end" (default: "cursor")               |
-| `deleteText`  | 删除指定的文本     | `target`: string (位置描述，如"第一段"、"第二句"、"高兴")                                  |
-| `replaceText` | 替换文本内容       | `old`: string, `new`: string, `scope`: "first" \| "all" (default: "first")                 |
-| `applyFormat` | 对文本应用格式     | `target`: string (位置描述), `format`: "bold" \| "italic" \| "highlight", `color?`: string |
+| Tool Name     | Description        | Parameters (Zod Schema)                                                                                               |
+| :------------ | :----------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| `insertText`  | 在指定位置插入文本 | `text`: string, `target?`: EditorTarget (可选，不提供则插入到当前选区)                                                |
+| `deleteText`  | 删除指定的文本     | `target`: EditorRange (只支持 "selection" 或 {from: number, to: number})                                              |
+| `replaceText` | 替换文本内容       | `old`: string, `new`: string                                                                                          |
+| `applyFormat` | 对文本应用格式     | `target`: EditorRange (只支持 "selection" 或 {from: number, to: number}), `format`: "bold" \| "italic" \| "highlight" |
+| `undo`        | 撤销上一个操作     | 无参数                                                                                                                |
+| `redo`        | 重做上一个撤销操作 | 无参数                                                                                                                |
 
-**工具定义示例 (TypeScript)**：
+**类型定义**：
 
-```typescript
-import { tool } from 'ai';
-import { z } from 'zod';
+- **`EditorRange`**: `"selection" | { from: number; to: number }` - 用于 deleteText 和 applyFormat
+- **`EditorPosition`**: `number | "selectionStart" | "selectionEnd" | "documentStart" | "documentEnd"` - 用于 insertText 的位置
+- **`EditorTarget`**: `EditorPosition | EditorRange` - insertText 的可选 target 字段
 
-const tools = {
-  insertText: tool({
-    description: '在指定位置插入文本',
-    parameters: z.object({
-      text: z.string().describe('要插入的文本'),
-      position: z.enum(['cursor', 'start', 'end']).default('cursor'),
-    }),
-  }),
+**设计决策**：
 
-  deleteText: tool({
-    description: '删除指定的文本',
-    parameters: z.object({
-      target: z
-        .string()
-        .describe('目标文本或位置描述，如"第一段"、"第二句"、"高兴"'),
-    }),
-  }),
-
-  replaceText: tool({
-    description: '替换文本内容',
-    parameters: z.object({
-      old: z.string().describe('要被替换的文本'),
-      new: z.string().describe('新文本'),
-      scope: z.enum(['first', 'all']).default('first'),
-    }),
-  }),
-
-  applyFormat: tool({
-    description: '对文本应用格式',
-    parameters: z.object({
-      target: z.string().describe('目标文本或位置，如"第一段"'),
-      format: z.enum(['bold', 'italic', 'highlight']),
-      color: z.string().optional().describe('高亮颜色，如"red"、"yellow"'),
-    }),
-  }),
-};
-```
+1. **类型分离**：`EditorPosition` 和 `EditorRange` 分别用于不同的命令类型
+   - `insertText` 使用 `EditorTarget`（可选），包含 position 和 range
+   - `deleteText` 和 `applyFormat` 只使用 `EditorRange`（不支持描述性字符串）
+2. **insertText 默认行为**：如果 `target` 未提供，直接调用 `insertContent(text)`，这是 Tiptap 的默认行为
+3. **Range 坐标支持**：测试验证小模型可以输出 range 坐标 `{from, to}`，因此支持精确的字符位置操作
 
 ### 2.2 System Prompt 约束
 
