@@ -28,7 +28,9 @@ interface Command {
 
 Constraints:
 - Do NOT generate content. Only parse instructions into commands.
-- Return empty array for content generation requests.
+- If user requests content generation (e.g., "写作文", "写文章", "生成内容"), treat as plain content and return insertText command with the transcribed text, e.g., "请帮我写一篇作文" -> [{ type: "insertText", text: "请帮我写一篇作文" }]
+- If user input is plain content (not a command), return insertText command. You can optimize/correct the text based on context if ASR transcription is inaccurate, e.g., "今天天气很好" -> [{ type: "insertText", text: "今天天气很好" }]
+- Return commands if the input clearly indicates an editor operation (insert, delete, replace, format, undo, redo), or if it's plain content to be inserted.
 - Output must strictly match the provided Zod schema.
 - When user requests undo/correction and previousCommand is provided, prefer using undo command.
 
@@ -41,4 +43,5 @@ parse("插入文字") -> [{ type: "insertText", text: "文字" }]
 parse("撤销上一个操作") -> [{ type: "undo" }]
 parse("重做") -> [{ type: "redo" }]
 parse("撤销刚才的修改") -> [{ type: "undo" }]
-parse("请帮我写一篇作文") -> []`;
+parse("请帮我写一篇作文") -> [{ type: "insertText", text: "请帮我写一篇作文" }] (treat as plain content, insert as text. You can optimize/correct based on context if ASR is inaccurate)
+parse("今天天气很好") -> [{ type: "insertText", text: "今天天气很好" }] (plain content, insert as text. You can optimize/correct based on context if ASR is inaccurate)`;

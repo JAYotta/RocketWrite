@@ -79,13 +79,14 @@ pnpm test prompt-versions
 #### `llm/helpers.ts`
 
 Shared utilities for LLM tests:
+
 - `checkOllamaAvailable()` - Check if Ollama is available and the required model exists
 - `generateCommand()` - Generate command from LLM using Ollama
-- `validateSafetyTest()` - Default validation for safety tests
 
 #### `llm/test-cases.ts`
 
 Test case definitions:
+
 - `TestCase` interface
 - `TEST_CASES` array - All test cases with their validation logic
 
@@ -114,6 +115,7 @@ pnpm test command-executor
 ```
 
 **Test coverage:**
+
 - All command types (insertText, deleteText, replaceText, applyFormat, undo, redo)
 - Editor state changes (HTML content, formatting)
 - Edge cases (empty document, no selection)
@@ -122,6 +124,7 @@ pnpm test command-executor
 #### `editor/helpers.ts`
 
 Shared utilities for editor tests:
+
 - `createTestEditor()` - Create a test editor instance with StarterKit
 - `getTextContent()` - Get plain text content from editor
 

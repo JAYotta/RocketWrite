@@ -51,7 +51,7 @@ export const ReplaceTextSchema = z.object({
 });
 
 // Limited set of formats that a 1.5B model can reliably distinguish
-export const FormatTypeSchema = z.enum(["bold", "italic", "highlight"]);
+export const FormatTypeSchema = z.enum(["bold", "italic"]);
 
 // Zod Schema for ApplyFormatCommand (wraps core type)
 export const ApplyFormatSchema = z.object({
