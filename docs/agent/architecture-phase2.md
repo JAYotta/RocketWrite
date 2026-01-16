@@ -100,4 +100,4 @@ const systemPrompt = buildSystemPrompt(schemaInfo);
 2.  **CORS**: 确保用户运行 `OLLAMA_ORIGINS="*" ollama serve`。
 3.  **Tool Calling**: 优先依赖 Tool Calling 能力，而非强制 JSON Mode，Qwen Coder 对 Tool 支持更好。
 4.  **Schema 感知**: 每次请求前提取编辑器 Schema，注入 System Prompt，防止生成不支持的格式。
-5.  **文本定位**: `target` 参数支持模糊定位（"第一段"、"第二句"），需要在前端实现文本定位逻辑。
+5.  **文本定位**: `target` 参数使用 range 坐标 `{from, to}`，要求 LLM 直接输出坐标。描述性文本定位（"第一段"、"第二句"等）暂不考虑实现，未来可考虑测试模型输出 range 坐标的准确率或整段重写并 diff 的能力。

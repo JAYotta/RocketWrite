@@ -28,11 +28,11 @@ We will use these examples to verify the model's ability to map Natural Language
 
 ### 2. Tool: `deleteText`
 
-| User Intent      | Expected JSON Output                            | Note               |
-| :--------------- | :---------------------------------------------- | :----------------- |
-| "删除这段话"     | `{"type": "deleteText", "target": "selection"}` | Context implied    |
-| "删掉第二句"     | `{"type": "deleteText", "target": "第二句"}`    | Descriptive target |
-| "把最后一段删了" | `{"type": "deleteText", "target": "最后一段"}`  | Descriptive target |
+| User Intent      | Expected JSON Output                                     | Note                     |
+| :--------------- | :------------------------------------------------------- | :----------------------- |
+| "删除这段话"     | `{"type": "deleteText", "target": "selection"}`          | Context implied          |
+| "删掉第二句"     | `{"type": "deleteText", "target": {from: 10, to: 50}}`   | 要求 LLM 输出 range 坐标 |
+| "把最后一段删了" | `{"type": "deleteText", "target": {from: 100, to: 200}}` | 要求 LLM 输出 range 坐标 |
 
 ### 3. Tool: `replaceText`
 
@@ -44,11 +44,11 @@ We will use these examples to verify the model's ability to map Natural Language
 
 ### 4. Tool: `applyFormat`
 
-| User Intent          | Expected JSON Output                                                    | Note                          |
-| :------------------- | :---------------------------------------------------------------------- | :---------------------------- |
-| "把'重点'两个字加粗" | `{"type": "applyFormat", "format": "bold", "target": "重点"}`           | Specific text                 |
-| "高亮选中的文字"     | `{"type": "applyFormat", "format": "highlight", "target": "selection"}` | Selection                     |
-| "把第一段便斜体"     | `{"type": "applyFormat", "format": "italic", "target": "第一段"}`       | Typo tolerance ("便" -> "变") |
+| User Intent          | Expected JSON Output                                                       | Note                                                     |
+| :------------------- | :------------------------------------------------------------------------- | :------------------------------------------------------- |
+| "把'重点'两个字加粗" | `{"type": "applyFormat", "format": "bold", "target": "重点"}`              | Specific text                                            |
+| "高亮选中的文字"     | `{"type": "applyFormat", "format": "highlight", "target": "selection"}`    | Selection                                                |
+| "把第一段便斜体"     | `{"type": "applyFormat", "format": "italic", "target": {from: 0, to: 50}}` | 要求 LLM 输出 range 坐标（未来考虑：描述性定位暂不实现） |
 
 ### 5. Tool: `undo`
 
@@ -56,7 +56,7 @@ We will use these examples to verify the model's ability to map Natural Language
 | :------------------- | :---------------------------------------------------------------- | :------------------- | :--------------------- |
 | "撤销上一个操作"     | `{"type": "replaceText", "old": "开心", "new": "兴高采烈"}`       | `{"type": "undo"}`   | Undo replace operation |
 | "撤销刚才插入的文字" | `{"type": "insertText", "text": "我的假期", "position": "start"}` | `{"type": "undo"}`   | Undo insert operation  |
-| "撤销删除"           | `{"type": "deleteText", "target": "第二句"}`                      | `{"type": "undo"}`   | Undo delete operation  |
+| "撤销删除"           | `{"type": "deleteText", "target": {from: 10, to: 50}}`            | `{"type": "undo"}`   | Undo delete operation  |
 | "撤销刚才的修改"     | `{"type": "applyFormat", "format": "bold", "target": "重点"}`     | `{"type": "undo"}`   | Undo format operation  |
 
 ### 6. Tool: `redo`

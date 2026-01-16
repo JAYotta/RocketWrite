@@ -34,56 +34,93 @@
 
 在正式集成前，请先完成 [Minimal POC Plan](plan-step2-minimal-poc.md) 中的验证工作：
 
-- [ ] **Test Back**: 确保 Qwen 能理解我们的 Zod Schema。
-- [ ] **Test Front**: 确保 Editor 能正确渲染 Diff。
+- [x] **Test Back**: 确保 Qwen 能理解我们的 Zod Schema。（已在 Phase 2 POC 完成）
+- [ ] **Test Front**: 确保 Editor 能正确渲染 Diff。（移至 Phase 3.2）
 
 ### 3.1 基础设施搭建 (Backend)
 
 - [x] **Ollama Setup** (已在 Phase 2 POC 完成)
   - 确认服务运行正常。
 
-### 3.2 前端集成 (Frontend)
+### 3.2 Phase 3.1: 核心指令执行（MVP）
+
+**目标**：实现端到端的指令解析和执行，不考虑 diff 预览等 UI 效果。
 
 - [x] **依赖安装** (已在 Phase 2 POC 完成)
 - [x] **工具注册表 (Tool Registry) 定义** (已在 Phase 2 POC 完成)
+- [x] **基础命令执行器** (已在 Phase 2 POC 完成基础版本)
+- [ ] **Context 提取工具**:
+  - 创建 `frontend/src/utils/contextExtractor.ts`
+  - 实现滑动窗口策略（提取选区前后的文本）
+  - 将 Context 信息注入请求
 - [ ] **Intent Handler 集成**:
-  - 在 `useChat` (或 `useActionState`) 中集成 `generateObject`
+  - 创建 `frontend/src/hooks/useCommandParser.ts`
+  - 在 Hook 中集成 `generateObject`
   - 配置 Zod Schema 定义意图
   - 编写 handler 分发意图对象到命令执行器
-- [x] **基础命令执行器** (已在 Phase 2 POC 完成基础版本)
-- [ ] **命令执行器完善**:
-  - 实现复杂文本定位逻辑 (`findTextPosition`): "第一段"、"第二句"等
-  - 完善各命令的执行函数（处理边界情况）
-  - 实现 Switch-Case 处理器，将 LLM 的 Intent Object 映射为 Tiptap 的 `editor.chain()...run()`
+- [ ] **App.tsx 集成**:
+  - 集成 Phase 1 的语音转录功能（`useMicVAD`）
+  - 实现指令路由逻辑：区分"转录模式"和"编辑模式"
+    - 转录模式：语音直接转录为文字（现有功能）
+    - 编辑模式：语音作为指令输入，调用 `useCommandParser` Hook
+  - 添加模式切换机制（如空格键切换）
+  - 直接执行命令（无预览）
+  - 基础错误处理和反馈（toast/loading）
 
-### 3.3 Schema & Context 完整实现
+**验收标准**：
 
-- [ ] **Schema 提取工具** (Phase 2 POC 中标记为未来考虑，Phase 3 需要实现):
+- ✅ 能够解析并执行简单指令（"删除上一句"、"加粗选中文字"）
+- ✅ 能够拒绝生成式请求（"写一篇作文"）
+- ✅ 延迟 < 1 秒
+- ✅ 有基础的 Loading 状态和错误提示
+
+### 3.3 Phase 3.2: UI/UX 优化（Diff 预览与交互）
+
+**目标**：实现完整的用户交互体验，包括 diff 预览、确认机制等。
+
+- [ ] **Schema 提取工具**（可选，如果 Phase 3.1 发现需要）:
   - 创建 `frontend/src/utils/schemaExtractor.ts`
   - 实现 `extractSchemaInfo(editor)` 函数
   - 提取当前编辑器支持的 nodes 和 marks
-- [ ] **Schema 约束注入**:
-  - 在每次请求前提取 Schema 信息
   - 将 Schema 信息注入 System Prompt
-  - 验证 LLM 输出符合 Schema 约束
-- [ ] **Context 提取与注入**:
-  - 实现滑动窗口策略（提取选区前后的文本）
-  - 将 Context 信息注入请求
-  - 优化 Context 大小（平衡准确率和性能）
-
-### 3.4 交互体验 (UI/UX)
-
+- [ ] **命令执行器完善**:
+  - 完善 `replaceText` 命令（实现真正的文本替换）
+  - 完善 `applyFormat` 命令（处理边界情况）
+  - 注：描述性文本定位（"第一段"、"第二句"等）暂不考虑实现，未来可考虑测试模型输出 range 坐标或整段重写并 diff 的能力
+- [ ] **命令状态管理**:
+  - 创建 `frontend/src/hooks/useCommandState.ts`
+  - 实现完整的状态机（idle、listening、reasoning、preview、applied）
 - [ ] **Diff 预览**:
+  - 创建 `frontend/src/components/CommandPreview.tsx`
   - 引入 `prosemirror-suggestion-mode` 或实现自定义 Diff 显示
   - 对于 "替换/修改" 类指令，先应用 "Suggestion Mark" (绿色新增/红色删除)，用户确认后再 Apply
+  - **Test Front**: 确保 Editor 能正确渲染 Diff
 - [ ] **Ask AI 菜单**:
+  - 创建 `frontend/src/components/AIMenu.tsx`
   - 仿照 Novel.sh，实现按下空格或 `/` 唤起的悬浮菜单，展示 AI 思考过程
-- [ ] **指令路由 UI**:
-  - 实现 Push-to-Talk 模式切换（空格键进入编辑模式）
+- [ ] **指令路由 UI 优化**:
+  - 优化模式切换体验（更清晰的视觉指示）
   - 显示解析状态（Loading、Reasoning、Preview）
+
+**验收标准**：
+
+- ✅ 能够预览命令执行效果
+- ✅ 用户可以在预览后确认或拒绝
+- ✅ 有清晰的模式切换指示
+- ✅ 交互流畅，体验良好
 
 ## 4. 验证标准
 
-1. **延迟**: 从说话结束到指令执行 < 1 秒。
+### 4.1 Phase 3.1 验证标准
+
+1. **延迟**: 从指令输入到命令执行 < 1 秒。
 2. **准确率**: 简单指令 ("删除上一句") 成功率 > 95%。
 3. **安全性**: 能够拒绝 "帮我写一篇作文" 的生成式请求（通过 System Prompt 约束）。
+4. **基础反馈**: 有明确的 Loading 状态和错误提示。
+
+### 4.2 Phase 3.2 验证标准
+
+1. **预览功能**: 能够预览命令执行效果。
+2. **确认机制**: 用户可以在预览后确认或拒绝。
+3. **模式切换**: 有清晰的模式切换指示（转录模式 vs 编辑模式）。
+4. **交互流畅**: 整体交互体验流畅，无明显卡顿。

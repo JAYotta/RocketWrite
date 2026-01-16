@@ -121,31 +121,69 @@
 
 **时间估算：** 2-3 个工作日（包含 Tool Registry 定义和基础命令执行器）
 
-### 3.4 阶段三：完整智能指令解析 (Local AI Toolkit) <!-- Phase 2.2 -->
+### 3.4 阶段三：完整智能指令解析 (Local AI Toolkit)
 
 **目标：** 移除 Mock，实现端到端的自然语言指令控制。
 
+#### 3.4.1 Phase 3.1: 核心指令执行（MVP）
+
+**目标：** 实现端到端的指令解析和执行，不考虑 diff 预览等 UI 效果。
+
 **功能清单：**
 
-- [ ] **Integration (端到端集成)**:
-  - [ ] `useChat` Hook 对接本地 Ollama API
-  - [ ] 移除 Mock Provider（或保留作为 Debug 模式）
-  - [ ] 实现指令路由逻辑（区分"内容输入"和"编辑指令"）
+- [ ] **Context & Schema 提取**:
+  - [ ] Context 提取工具实现（滑动窗口策略）
+  - [ ] Schema 提取工具实现（阶段二标记为未来考虑，阶段三需要实现）
+  - [ ] Schema 约束注入到 System Prompt
+  - [ ] Context 注入到请求
+- [ ] **Intent Handler 集成**:
+  - [ ] 创建 `useCommandParser` Hook
+  - [ ] 在 Hook 中集成 `generateObject`
+  - [ ] 配置 Zod Schema 定义意图
+  - [ ] 编写 handler 分发意图对象到命令执行器
 - [ ] **Command Bridge 完善 (指令解析)**:
   - [x] Tool Registry 定义（已在阶段二完成）
-  - [ ] 完善命令执行器（实现复杂文本定位："第一段"、"第二句"等）
-  - [ ] 实现文本定位逻辑 (`findTextPosition`)
-  - [ ] 意图分类与参数提取（LLM 调用）
-- [ ] **Schema & Context 完整实现**:
-  - [ ] Schema 提取工具实现（阶段二标记为未来考虑，阶段三需要实现）
-  - [ ] Schema 约束注入到 System Prompt（完整实现）
-  - [ ] Context 提取（滑动窗口策略）
-  - [ ] Context 注入到请求
-- [ ] **UX/UI**:
+  - [ ] 完善命令执行器（处理边界情况，实现 replaceText 真实逻辑）
+  - [ ] 注：描述性文本定位（"第一段"、"第二句"等）暂不考虑实现，未来可考虑测试模型输出 range 坐标或整段重写并 diff 的能力
+- [ ] **App.tsx 集成**:
+  - [ ] 添加简单的指令输入（文本输入框或按钮）
+  - [ ] 直接执行命令（无预览）
+  - [ ] 基础错误处理和反馈（toast/loading）
+
+**验收标准**：
+
+- ✅ 能够解析并执行简单指令（"删除上一句"、"加粗选中文字"）
+- ✅ 能够拒绝生成式请求（"写一篇作文"）
+- ✅ 延迟 < 1 秒
+- ✅ 有基础的 Loading 状态和错误提示
+
+#### 3.4.2 Phase 3.2: UI/UX 优化（Diff 预览与交互）
+
+**目标：** 实现完整的用户交互体验，包括 diff 预览、确认机制等。
+
+**功能清单：**
+
+- [ ] **命令状态管理**:
+  - [ ] 实现完整的状态机（idle、listening、reasoning、preview、applied）
+- [ ] **Diff 预览**:
+  - [ ] Diff 预览组件 (基于 `prosemirror-suggestion-mode` 或独立组件)
+  - [ ] 对于 "替换/修改" 类指令，先应用 "Suggestion Mark"，用户确认后再 Apply
+- [ ] **Ask AI 菜单**:
   - [ ] "Ask AI" 悬浮菜单 (参考 Novel.sh)
-  - [ ] Diff 预览 (基于 `prosemirror-suggestion-mode`)
-  - [ ] 确认/拒绝交互
-  - [ ] 加载状态和错误处理
+  - [ ] 按下空格或 `/` 唤起菜单
+- [ ] **指令路由 UI**:
+  - [ ] 实现 Push-to-Talk 模式切换（空格键进入编辑模式）
+  - [ ] 区分"转录模式"和"编辑模式"
+  - [ ] 显示解析状态（Loading、Reasoning、Preview）
+- [ ] **确认/拒绝交互**:
+  - [ ] 用户可以在预览后确认或拒绝命令
+
+**验收标准**：
+
+- ✅ 能够预览命令执行效果
+- ✅ 用户可以在预览后确认或拒绝
+- ✅ 有清晰的模式切换指示
+- ✅ 交互流畅，体验良好
 
 **技术方案：**
 
