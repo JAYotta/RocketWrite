@@ -1,8 +1,9 @@
 /**
- * Ollama Integration Tests
+ * Prompt to Command Tests
  *
- * These tests verify that Ollama integration is working correctly.
- * Uses a fixed prompt version (v2) to focus on integration validation.
+ * These tests verify that the LLM can correctly parse user's natural language prompts
+ * and convert them into structured editor commands.
+ * Uses a fixed prompt version (v2) to focus on command parsing validation.
  */
 
 import { describe, it, beforeAll } from "vitest";
@@ -10,7 +11,7 @@ import { getSystemPrompt } from "../../prompts/system-prompts";
 import { TEST_CASES } from "./test-cases";
 import { checkOllamaAvailable, generateCommand } from "./helpers";
 
-describe("Ollama Integration", () => {
+describe("Prompt to Command", () => {
   beforeAll(async () => {
     await checkOllamaAvailable();
   });

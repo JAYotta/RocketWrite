@@ -93,7 +93,7 @@ describe("Editor Commands Schema", () => {
     });
 
     it("should accept all format types", () => {
-      const formats = ["bold", "italic", "highlight"];
+      const formats = ["bold", "italic"];
       formats.forEach((format) => {
         const valid = {
           type: "applyFormat",
@@ -144,7 +144,7 @@ describe("Editor Commands Schema", () => {
     it("should validate applyFormat command", () => {
       const cmd = {
         type: "applyFormat",
-        format: "highlight",
+        format: "bold",
         target: "selection",
       };
       expect(() => EditorCommandSchema.parse(cmd)).not.toThrow();

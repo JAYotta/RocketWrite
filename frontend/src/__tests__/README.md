@@ -38,13 +38,31 @@ Unit tests for Zod schema validation. These tests verify that the command schema
 pnpm test editor-commands
 ```
 
+### `asr/` - ASR (Audio Speech Recognition) Tests
+
+ASR-related tests are organized in the `asr/` subdirectory.
+
+#### `asr/audio-utils.test.ts`
+
+Unit tests for WAV encoding using VAD library's built-in `utils.encodeWAV`:
+- Tests `utils.encodeWAV()` from `@ricky0123/vad-react` which converts Float32Array to WAV ArrayBuffer
+- Verifies WAV header format and conversion to Blob for file upload
+
+**Note:** We use the official `utils.encodeWAV()` from `@ricky0123/vad-react` instead of a custom implementation. This is better integrated with the VAD library's output format and eliminates the need for additional dependencies.
+
+**Run independently:**
+
+```bash
+pnpm test audio-utils
+```
+
 ### `llm/` - LLM Integration Tests
 
 LLM-related tests and utilities are organized in the `llm/` subdirectory.
 
-#### `llm/ollama-integration.test.ts`
+#### `llm/prompt-to-command.test.ts`
 
-Integration tests for Ollama connectivity and basic functionality. Uses a fixed prompt version (v2) to verify that Ollama integration is working correctly.
+Tests that verify the LLM can correctly parse user's natural language prompts and convert them into structured editor commands. Uses a fixed prompt version (v2) to focus on command parsing validation.
 
 **Prerequisites:**
 
@@ -54,7 +72,7 @@ Integration tests for Ollama connectivity and basic functionality. Uses a fixed 
 **Run independently:**
 
 ```bash
-pnpm test ollama-integration
+pnpm test prompt-to-command
 ```
 
 **Note:** Tests will fail if Ollama is not available (throws error in `beforeAll`).
@@ -94,16 +112,6 @@ Test case definitions:
 
 Editor-related tests are organized in the `editor/` subdirectory.
 
-#### `editor/tiptap-commands.test.tsx`
-
-Unit tests for Tiptap editor commands. These tests verify editor functionality without rendering.
-
-**Run independently:**
-
-```bash
-pnpm test tiptap-commands
-```
-
 #### `editor/command-executor.test.ts`
 
 Integration tests for `commandExecutor` with Tiptap Editor. Tests that `EditorCommand` objects are correctly executed and produce expected results.
@@ -128,6 +136,40 @@ Shared utilities for editor tests:
 - `createTestEditor()` - Create a test editor instance with StarterKit
 - `getTextContent()` - Get plain text content from editor
 
+### `app/` - App Component Tests
+
+App-related tests are organized in the `app/` subdirectory.
+
+#### `app/MicrophoneButton.test.tsx`
+
+Unit tests for Microphone Button UI behavior (VAD-related), including:
+- Button states based on listening/userSpeaking
+- Button interactions (start/pause)
+- Loading indicator display during command parsing
+- Button disabled states
+
+**Run independently:**
+
+```bash
+pnpm test MicrophoneButton
+```
+
+#### `app/app-flow.test.tsx`
+
+End-to-end tests for App.tsx command flow. These tests verify the complete flow from user input to command execution:
+
+1. Intent detection (parseCommand)
+2. Route decision (command vs content)
+3. Command execution or content insertion
+
+**Note:** Command execution itself is tested in `editor/command-executor.test.ts`. This test focuses on App.tsx's routing logic and integration between components.
+
+**Run independently:**
+
+```bash
+pnpm test app-flow
+```
+
 ## Writing New Tests
 
 ### For Schema/Utility Tests
@@ -136,11 +178,11 @@ Use `editor-commands.test.ts` as a template. These are pure unit tests with no e
 
 ### For LLM Integration Tests
 
-Use `llm/ollama-integration.test.ts` or `llm/prompt-versions.test.ts` as templates. Always check for Ollama availability using `checkOllamaAvailable()` from `llm/helpers.ts`. The test suite will fail early if Ollama is not available (using `beforeAll` + `throw Error`).
+Use `llm/prompt-to-command.test.ts` or `llm/prompt-versions.test.ts` as templates. Always check for Ollama availability using `checkOllamaAvailable()` from `llm/helpers.ts`. The test suite will fail early if Ollama is not available (using `beforeAll` + `throw Error`).
 
 ### For Editor Integration Tests
 
-Use `editor/command-executor.test.ts` or `editor/tiptap-commands.test.tsx` as templates. Use `createTestEditor()` from `editor/helpers.ts` to create test editor instances. Mock external dependencies like `sonner` toast notifications when needed.
+Use `editor/command-executor.test.ts` as a template. Use `createTestEditor()` from `editor/helpers.ts` to create test editor instances. Mock external dependencies like `sonner` toast notifications when needed.
 
 ### For React Component Tests
 
