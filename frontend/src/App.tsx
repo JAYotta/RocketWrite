@@ -2,17 +2,13 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
 
-import { useMicVAD } from "@ricky0123/vad-react";
+import { useMicVAD, utils } from "@ricky0123/vad-react";
 import axios from "axios";
 import { Button } from "@heroui/react";
-import {
-  Microphone,
-  MicrophoneSpeaking,
-  Pause,
-  Play,
-  Square,
-} from "iconoir-react";
+import { Microphone, MicrophoneSpeaking, Pause, Play } from "iconoir-react";
 import { toast } from "sonner";
+import { useCommandParser } from "./hooks/useCommandParser";
+import { useAsrQueue } from "./hooks/useAsrQueue";
 
 const BACKEND_URL = "http://localhost:8000/transcribe";
 
@@ -27,10 +23,19 @@ function App() {
     ],
   });
 
-  // Transcription upload logic
+  // Command parser hook
+  const { parseCommand, isLoading: isParsing } = useCommandParser(editor);
+
+  // ASR queue hook: manages transcription items and serial LLM processing
+  const { queue, enqueue } = useAsrQueue(editor as any, parseCommand);
+
+  // Transcription and intent detection logic
   const uploadAudio = async (audio: Float32Array) => {
     try {
-      const wavBlob = float32ToWav(audio);
+      // 1. ASR transcription
+      // Use VAD library's built-in WAV encoder (returns ArrayBuffer)
+      const wavBuffer = utils.encodeWAV(audio);
+      const wavBlob = new Blob([wavBuffer], { type: "audio/wav" });
       const file = new File([wavBlob], "audio.wav", { type: "audio/wav" });
       const formData = new FormData();
       formData.append("file", file);
@@ -40,19 +45,29 @@ function App() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (response.data && response.data.text) {
-        const text = response.data.text.trim();
-        // Insert into Editor directly
-        if (editor && text) {
-          editor
-            .chain()
-            .insertContent(text + " ")
-            .run();
-        }
+      if (!response.data || !response.data.text) {
+        return;
       }
-    } catch (e: any) {
-      toast.error("Transcription failed", {
-        description: e.message || "Unknown error",
+
+      const transcribedText = response.data.text.trim();
+      if (!transcribedText || !editor) {
+        return;
+      }
+
+      // 2. 将转录文本加入队列，由队列统一负责 LLM 解析和命令执行
+      const enqueueResult = enqueue(transcribedText);
+      if (!enqueueResult.ok && enqueueResult.reason === "queue_full") {
+        // 队列已满：暂停录音并提示用户
+        pause();
+        toast.warning("队列已满（50/50），已暂停录音", {
+          description: "请处理或清理队列后再继续录音。",
+        });
+      }
+    } catch (e) {
+      console.error("[App] Audio processing failed:", e);
+      const errorMessage = e instanceof Error ? e.message : "Unknown error";
+      toast.error("Audio processing failed", {
+        description: errorMessage,
       });
     }
   };
@@ -62,7 +77,7 @@ function App() {
     onnxWASMBasePath: "/",
     model: "v5",
     // Tuning for better response
-    positiveSpeechThreshold: 0.6, // Default 0.5. Higher = harder to start (less false positives)
+    positiveSpeechThreshold: 0.4, // Default 0.5. Higher = harder to start (less false positives)
     negativeSpeechThreshold: 0.5, // Default 0.35. Higher = easier to stop (cuts silence faster)
     startOnLoad: false,
     onSpeechEnd: (audio) => {
@@ -79,12 +94,20 @@ function App() {
 
       {/* Floating Action Button */}
       <div className="fixed bottom-10 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-4">
+        {/* Loading indicator when parsing command */}
+        {isParsing && (
+          <div className="bg-primary/20 text-primary rounded-full px-4 py-2 text-sm">
+            正在解析指令...
+          </div>
+        )}
+
         <Button
           variant={listening ? "primary" : "secondary"}
           onPress={listening ? pause : start}
           isIconOnly
           size="lg"
           aria-label={listening ? "Stop Recording" : "Start Recording"}
+          isDisabled={isParsing}
         >
           {({ isHovered }) =>
             !listening ? (
@@ -105,39 +128,6 @@ function App() {
       </div>
     </div>
   );
-}
-
-// Helpers
-function float32ToWav(samples: Float32Array): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-  writeString(view, 0, "RIFF");
-  view.setUint32(4, 36 + samples.length * 2, true);
-  writeString(view, 8, "WAVE");
-  writeString(view, 12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, 16000, true);
-  view.setUint32(28, 16000 * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(view, 36, "data");
-  view.setUint32(40, samples.length * 2, true);
-  floatTo16BitPCM(view, 44, samples);
-  return new Blob([view], { type: "audio/wav" });
-}
-function writeString(view: DataView, offset: number, string: string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i));
-  }
-}
-function floatTo16BitPCM(view: DataView, offset: number, input: Float32Array) {
-  for (let i = 0; i < input.length; i++, offset += 2) {
-    let s = Math.max(-1, Math.min(1, input[i]));
-    s = s < 0 ? s * 0x8000 : s * 0x7fff;
-    view.setInt16(offset, s, true);
-  }
 }
 
 export default App;
